@@ -1,0 +1,27 @@
+.question-image-loading {
+    margin-top: 16px;
+    padding: 28px 18px;
+    border: 1px solid #eceef1;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #667085;
+    text-align: center;
+    font-size: 14px;
+}
+
+.question-image-wrap-hq {
+    padding: 10px;
+    background: #ffffff;
+}
+
+.question-original-svg-hq {
+    width: min(100%, 1000px);
+    height: auto;
+    image-rendering: auto;
+}
+
+@media (max-width: 600px) {
+    .question-image-wrap-hq {
+        padding: 6px;
+    }
+}
