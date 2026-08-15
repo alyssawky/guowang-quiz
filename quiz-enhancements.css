@@ -70,3 +70,72 @@
 .quiz-question-card {
     align-items: flex-start;
 }
+
+.question-image-wrap {
+    margin-top: 16px;
+    padding: 12px;
+    overflow: hidden;
+    border: 1px solid #eceef1;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.question-original-image,
+.question-original-svg {
+    display: block;
+    width: 100%;
+    max-width: 1000px;
+    height: auto;
+    margin: 0 auto;
+}
+
+.image-answer-tip {
+    margin: 12px 0 0;
+    color: #667085;
+    font-size: 13px;
+}
+
+.image-letter-options {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.image-letter-option {
+    min-height: 48px;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.answer-explanation {
+    margin-top: 12px;
+}
+
+.dual-explanation {
+    display: grid;
+    gap: 10px;
+}
+
+.explanation-block {
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #f7f8fa;
+    line-height: 1.7;
+}
+
+.explanation-block strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.explanation-block p {
+    margin: 4px 0;
+}
+
+.calculator-method {
+    background: #eef5ff;
+}
+
+@media (max-width: 600px) {
+    .image-letter-options {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
