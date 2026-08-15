@@ -4,31 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>国网2027备考</title>
-    <link rel="stylesheet" href="style.css?v=20260815-4">
+    <link rel="stylesheet" href="style.css?v=20260815-5">
 </head>
 <body>
 
 <header class="site-header">
     <div class="header-content top-dashboard">
-
         <div class="brand-panel">
             <p class="small-title">STATE GRID 2027</p>
             <h1>国网备考</h1>
             <p class="subtitle">学习 · 复习 · 掌握</p>
 
             <section class="summary-card">
-                <div>
-                    <span class="summary-number" id="completed-count">0</span>
-                    <span class="summary-label">已完成</span>
-                </div>
-                <div>
-                    <span class="summary-number" id="review-count">0</span>
-                    <span class="summary-label">可复习</span>
-                </div>
-                <div>
-                    <span class="summary-number" id="total-count">0</span>
-                    <span class="summary-label">总任务</span>
-                </div>
+                <div><span class="summary-number" id="completed-count">0</span><span class="summary-label">已完成</span></div>
+                <div><span class="summary-number" id="review-count">0</span><span class="summary-label">可复习</span></div>
+                <div><span class="summary-number" id="total-count">0</span><span class="summary-label">总任务</span></div>
             </section>
         </div>
 
@@ -40,85 +30,54 @@
                 </div>
                 <div class="calendar-week" id="calendar-week">--</div>
             </div>
-
             <div class="week-strip" id="week-strip"></div>
-
-            <div class="week-task-heading">
-                <strong>本周任务</strong>
-                <span id="week-task-count">0 项</span>
-            </div>
-
+            <div class="week-task-heading"><strong>本周任务</strong><span id="week-task-count">0 项</span></div>
             <div class="week-task-list" id="week-task-list"></div>
         </aside>
-
     </div>
 </header>
 
 <main>
-
     <section class="compact-section">
         <details id="study-checkin">
             <summary class="compact-summary">
-                <span>
-                    <strong>学习打卡</strong>
-                    <small>只显示当前计划和逾期未完成</small>
-                </span>
+                <span><strong>学习打卡</strong><small>只显示当前计划和逾期未完成</small></span>
                 <span class="summary-count" id="visible-task-count">0 项</span>
             </summary>
-            <div class="compact-body">
-                <div id="task-list"></div>
-            </div>
+            <div class="compact-body"><div id="task-list"></div></div>
         </details>
     </section>
 
     <section class="review-main">
         <div class="section-title review-title-row">
-            <div>
-                <p class="eyebrow">REVIEW</p>
-                <h2>开始复习</h2>
-                <p>只会出现你已经完成学习的内容对应的题目</p>
-            </div>
+            <div><p class="eyebrow">REVIEW</p><h2>开始复习</h2><p>只会出现你已经完成学习的内容对应的题目</p></div>
             <button id="start-review-btn">开始复习</button>
         </div>
-
         <div id="quiz-area"></div>
     </section>
 
     <section class="compact-section">
         <details id="review-pool-book">
             <summary class="compact-summary">
-                <span>
-                    <strong>已解锁复习范围</strong>
-                    <small>查看目前已经学过、可以出题的内容</small>
-                </span>
+                <span><strong>已解锁复习范围</strong><small>查看目前已经学过、可以出题的内容</small></span>
                 <span class="summary-count" id="unlocked-task-count">0 项</span>
             </summary>
-            <div class="compact-body">
-                <div id="review-list"></div>
-            </div>
+            <div class="compact-body"><div id="review-list"></div></div>
         </details>
     </section>
 
     <section class="compact-section">
         <details id="wrong-book">
             <summary class="compact-summary">
-                <span>
-                    <strong>错题本</strong>
-                    <small>自动记录曾经答错的题目，并按板块分类</small>
-                </span>
+                <span><strong>错题本</strong><small>自动记录曾经答错的题目，并按板块分类</small></span>
                 <span class="summary-count" id="wrong-total-count">0 道</span>
             </summary>
-            <div class="compact-body">
-                <div id="wrong-list"></div>
-            </div>
+            <div class="compact-body"><div id="wrong-list"></div></div>
         </details>
     </section>
-
 </main>
 
-<button id="calculator-launcher" class="calculator-launcher" type="button" aria-controls="calculator-panel" aria-expanded="false">
-    计算器
-</button>
+<button id="calculator-launcher" class="calculator-launcher" type="button" aria-controls="calculator-panel" aria-expanded="false">计算器</button>
 
 <section id="calculator-panel" class="calculator-panel" aria-label="机考科学计算器" hidden>
     <div id="calculator-drag-handle" class="calculator-titlebar">
@@ -139,16 +98,15 @@
             <span id="calculator-memory-indicator" class="calculator-memory-indicator"></span>
         </div>
 
-        <div class="calculator-memory-grid">
-            <button type="button" data-action="memory-clear">MC</button>
-            <button type="button" data-action="memory-recall">MR</button>
-            <button type="button" data-action="memory-store">MS</button>
-            <button type="button" data-action="memory-add">M+</button>
-            <button type="button" data-action="memory-subtract">M−</button>
-        </div>
-
         <div id="calculator-grid" class="calculator-grid">
-            <!-- 第一行：功能控制 -->
+            <!-- Memory：每个按钮占两格，共一整行 -->
+            <button class="calculator-memory-key" type="button" data-action="memory-clear">MC</button>
+            <button class="calculator-memory-key" type="button" data-action="memory-recall">MR</button>
+            <button class="calculator-memory-key" type="button" data-action="memory-store">MS</button>
+            <button class="calculator-memory-key" type="button" data-action="memory-add">M+</button>
+            <button class="calculator-memory-key" type="button" data-action="memory-subtract">M−</button>
+
+            <!-- 控制行 -->
             <span class="calculator-spacer"></span>
             <button type="button" data-action="inverse" id="calculator-inverse">Inv</button>
             <button type="button" data-function="ln">ln</button>
@@ -160,7 +118,7 @@
             <button type="button" data-action="sign">±</button>
             <button type="button" data-function="sqrt">√</button>
 
-            <!-- 第二行：左侧科学函数 + 右侧 7 8 9 -->
+            <!-- 7 8 9 -->
             <button type="button" data-function="int">Int</button>
             <button type="button" data-function="sinh">sinh</button>
             <button type="button" data-function="sin">sin</button>
@@ -172,7 +130,7 @@
             <button type="button" data-operator="/">÷</button>
             <button type="button" data-action="percent">%</button>
 
-            <!-- 第三行：左侧科学函数 + 右侧 4 5 6 -->
+            <!-- 4 5 6 -->
             <button type="button" data-constant="e">e</button>
             <button type="button" data-function="cosh">cosh</button>
             <button type="button" data-function="cos">cos</button>
@@ -184,7 +142,7 @@
             <button type="button" data-operator="*">×</button>
             <button type="button" data-function="reciprocal">1/x</button>
 
-            <!-- 第四行：左侧科学函数 + 右侧 1 2 3 -->
+            <!-- 1 2 3 -->
             <button type="button" data-constant="pi">π</button>
             <button type="button" data-function="tanh">tanh</button>
             <button type="button" data-function="tan">tan</button>
@@ -196,23 +154,23 @@
             <button type="button" data-operator="-">−</button>
             <button type="button" data-action="equals" class="calculator-equals calculator-equals-tall">=</button>
 
-            <!-- 第五行：底部 -->
+            <!-- 0 . + -->
             <button type="button" data-function="log">log</button>
             <button type="button" data-function="exp">eˣ</button>
             <button type="button" data-operator="mod">Mod</button>
             <button type="button" data-action="percent">%</button>
             <button type="button" data-function="cuberoot">∛x</button>
-            <button type="button" data-value="0" class="calculator-zero calculator-zero-wide">0</button>
+            <button type="button" data-value="0" class="calculator-zero-wide">0</button>
             <button type="button" data-value=".">.</button>
             <button type="button" data-operator="+">+</button>
         </div>
     </div>
 </section>
 
-<script src="plan.js?v=20260815-4"></script>
-<script src="questions.js?v=20260815-4"></script>
-<script src="app.js?v=20260815-4"></script>
-<script src="calculator.js?v=20260815-4"></script>
+<script src="plan.js?v=20260815-5"></script>
+<script src="questions.js?v=20260815-5"></script>
+<script src="app.js?v=20260815-5"></script>
+<script src="calculator.js?v=20260815-5"></script>
 
 </body>
 </html>
