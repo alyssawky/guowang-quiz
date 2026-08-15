@@ -2,11 +2,29 @@
     const originalRenderQuestionImage = window.renderQuestionImage;
     const originalRenderQuestion = window.renderQuestion;
 
+    const directImages = {
+        "da-ch1-009": "assets/da-original/image17.webp?v=20260816-1",
+        "da-ch1-010": "assets/da-original/image17.webp?v=20260816-1"
+    };
+
     function escapeAttr(value) {
         return String(value || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
     window.renderQuestionImage = function (question) {
+        const direct = question && directImages[question.id];
+        if (direct) {
+            return `
+                <div class="question-image-wrap question-image-wrap-hq question-image-wrap-direct">
+                    <img
+                        class="question-original-image question-original-image-hq"
+                        src="${direct}"
+                        alt="${escapeAttr(question.sourceId || question.question || "原题") }"
+                    >
+                </div>
+            `;
+        }
+
         const layout = window.DA_HQ_LAYOUT && window.DA_HQ_LAYOUT[question && question.id];
 
         if (layout) {
@@ -53,7 +71,7 @@
         originalRenderQuestion();
 
         const question = window.currentReviewQuestions && window.currentReviewQuestions[window.currentQuestionIndex];
-        if (!question) return;
+        if (!question || directImages[question.id]) return;
 
         const layout = window.DA_HQ_LAYOUT && window.DA_HQ_LAYOUT[question.id];
         if (!layout) return;
