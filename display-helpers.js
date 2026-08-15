@@ -15,3 +15,14 @@
         task.name = `${index + 1} ${simplified}`;
     });
 })();
+
+// 第二章后半段题图修复必须在 quiz-enhancements 与 hq35 override 之后执行。
+// 这里等页面所有同步脚本加载完成，再追加修复脚本，避免它再次被旧低清覆盖层覆盖。
+window.addEventListener("DOMContentLoaded", () => {
+    if (document.querySelector('script[data-late-ch2-image-fix]')) return;
+
+    const script = document.createElement("script");
+    script.src = "assets/late-ch2-image-fix.js?v=20260816-2";
+    script.dataset.lateCh2ImageFix = "true";
+    document.body.appendChild(script);
+});
