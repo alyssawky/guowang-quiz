@@ -1,18 +1,77 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>国网2027备考</title>
+
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <h1>国网2027备考</h1>
+    <header>
+        <div class="header-content">
+            <p class="small-title">STATE GRID 2027</p>
+            <h1>国网备考</h1>
+            <p class="subtitle">学习 · 复习 · 掌握</p>
+        </div>
+    </header>
 
-    <p>学习进度 · 复习系统</p>
 
-    <h2>网站创建成功！正在搭建复习系统。</h2>
+    <main>
+
+        <section class="summary-card">
+
+            <div>
+                <span class="summary-number" id="completed-count">0</span>
+                <span class="summary-label">已完成</span>
+            </div>
+
+            <div>
+                <span class="summary-number" id="review-count">0</span>
+                <span class="summary-label">可复习</span>
+            </div>
+
+            <div>
+                <span class="summary-number" id="total-count">0</span>
+                <span class="summary-label">总任务</span>
+            </div>
+
+        </section>
+
+
+        <section>
+
+            <div class="section-title">
+                <h2>当前学习计划</h2>
+                <p>完成学习后，点击“标记完成”</p>
+            </div>
+
+            <div id="task-list"></div>
+
+        </section>
+
+
+        <section>
+
+            <div class="section-title">
+                <h2>已解锁复习</h2>
+                <p>只有已经学习过的内容会出现在这里</p>
+            </div>
+
+            <div id="review-list"></div>
+
+        </section>
+
+    </main>
+
+
+    <script src="plan.js"></script>
+    <script src="app.js"></script>
 
 </body>
+
 </html>
