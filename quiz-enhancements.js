@@ -114,7 +114,7 @@ function renderQuestion() {
     const optionsHTML = currentOptionOrder
         .map(option => {
             const buttonText = labelsOnly
-                ? option.displayKey
+                ? `答 ${option.displayKey}`
                 : `${option.displayKey}. ${option.value}`;
 
             if (isMultiple) {
@@ -174,7 +174,7 @@ function renderQuestion() {
 
                 ${imageHTML}
 
-                ${labelsOnly ? `<p class="image-answer-tip">原题题干和选项保留在题图中，请在下方选择对应字母。</p>` : ""}
+                ${labelsOnly ? `<p class="image-answer-tip"><strong>完整题干和选项都在上方原题图中。</strong> 下方是作答键，请选择对应字母。</p>` : ""}
 
                 ${isMultiple ? `<p class="multiple-tip">多选题：可选择多个答案，选好后点击“提交答案”。</p>` : ""}
 
