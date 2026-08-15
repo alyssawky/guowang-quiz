@@ -1,147 +1,128 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>国网2027备考</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-    <header>
-        <div class="header-content">
+<header class="site-header">
+    <div class="header-content top-dashboard">
+
+        <div class="brand-panel">
             <p class="small-title">STATE GRID 2027</p>
             <h1>国网备考</h1>
             <p class="subtitle">学习 · 复习 · 掌握</p>
+
+            <section class="summary-card">
+                <div>
+                    <span class="summary-number" id="completed-count">0</span>
+                    <span class="summary-label">已完成</span>
+                </div>
+                <div>
+                    <span class="summary-number" id="review-count">0</span>
+                    <span class="summary-label">可复习</span>
+                </div>
+                <div>
+                    <span class="summary-number" id="total-count">0</span>
+                    <span class="summary-label">总任务</span>
+                </div>
+            </section>
         </div>
-    </header>
 
+        <aside class="calendar-card">
+            <div class="calendar-heading">
+                <div>
+                    <div class="calendar-date" id="calendar-date">--</div>
+                    <div class="calendar-day" id="calendar-day">--</div>
+                </div>
+                <div class="calendar-week" id="calendar-week">--</div>
+            </div>
 
-    <main>
+            <div class="week-strip" id="week-strip"></div>
 
-        <!-- 顶部统计 -->
-        <section class="summary-card">
+            <div class="week-task-heading">
+                <strong>本周任务</strong>
+                <span id="week-task-count">0 项</span>
+            </div>
 
+            <div class="week-task-list" id="week-task-list"></div>
+        </aside>
+
+    </div>
+</header>
+
+<main>
+
+    <!-- 学习打卡：默认收起，只占很小区域 -->
+    <section class="compact-section">
+        <details id="study-checkin">
+            <summary class="compact-summary">
+                <span>
+                    <strong>学习打卡</strong>
+                    <small>只显示当前计划和逾期未完成</small>
+                </span>
+                <span class="summary-count" id="visible-task-count">0 项</span>
+            </summary>
+            <div class="compact-body">
+                <div id="task-list"></div>
+            </div>
+        </details>
+    </section>
+
+    <!-- 复习主区域 -->
+    <section class="review-main">
+        <div class="section-title review-title-row">
             <div>
-                <span class="summary-number" id="completed-count">0</span>
-                <span class="summary-label">已完成</span>
-            </div>
-
-            <div>
-                <span class="summary-number" id="review-count">0</span>
-                <span class="summary-label">可复习</span>
-            </div>
-
-            <div>
-                <span class="summary-number" id="total-count">0</span>
-                <span class="summary-label">总任务</span>
-            </div>
-
-        </section>
-
-
-        <!-- 当前学习计划 -->
-        <section>
-
-            <div class="section-title">
-                <h2>当前学习计划</h2>
-                <p>完成学习后，点击“标记完成”</p>
-            </div>
-
-            <div id="task-list"></div>
-
-        </section>
-
-
-        <!-- 已解锁复习 -->
-        <section>
-
-            <div class="section-title">
-                <h2>已解锁复习</h2>
-                <p>只有已经学习过的内容会出现在这里</p>
-            </div>
-
-            <div id="review-list"></div>
-
-        </section>
-
-
-        <!-- 开始复习 -->
-        <section>
-
-            <div class="section-title">
+                <p class="eyebrow">REVIEW</p>
                 <h2>开始复习</h2>
                 <p>只会出现你已经完成学习的内容对应的题目</p>
             </div>
+            <button id="start-review-btn">开始复习</button>
+        </div>
 
-            <button id="start-review-btn">
-                开始复习
-            </button>
+        <div id="quiz-area"></div>
+    </section>
 
-            <div id="quiz-area"></div>
+    <!-- 已解锁范围：默认收起 -->
+    <section class="compact-section">
+        <details id="review-pool-book">
+            <summary class="compact-summary">
+                <span>
+                    <strong>已解锁复习范围</strong>
+                    <small>查看目前已经学过、可以出题的内容</small>
+                </span>
+                <span class="summary-count" id="unlocked-task-count">0 项</span>
+            </summary>
+            <div class="compact-body">
+                <div id="review-list"></div>
+            </div>
+        </details>
+    </section>
 
-        </section>
-
-
-        <!-- 错题本：默认收起 -->
-        <section>
-
-            <details
-                id="wrong-book"
-                style="margin-top: 38px;"
-            >
-
-                <summary
-                    style="
-                        cursor: pointer;
-                        font-size: 26px;
-                        font-weight: 600;
-                        margin-bottom: 18px;
-                    "
-                >
-                    错题本
-
-                    <span
-                        id="wrong-total-count"
-                        style="
-                            margin-left: 8px;
-                            color: #86868b;
-                            font-size: 14px;
-                            font-weight: 400;
-                        "
-                    >
-                        0 道
-                    </span>
-                </summary>
-
-                <p
-                    style="
-                        margin-top: -8px;
-                        margin-bottom: 20px;
-                        color: #86868b;
-                        font-size: 14px;
-                    "
-                >
-                    自动记录曾经答错的题目，并按板块分类
-                </p>
-
+    <!-- 错题本：默认收起 -->
+    <section class="compact-section">
+        <details id="wrong-book">
+            <summary class="compact-summary">
+                <span>
+                    <strong>错题本</strong>
+                    <small>自动记录曾经答错的题目，并按板块分类</small>
+                </span>
+                <span class="summary-count" id="wrong-total-count">0 道</span>
+            </summary>
+            <div class="compact-body">
                 <div id="wrong-list"></div>
+            </div>
+        </details>
+    </section>
 
-            </details>
+</main>
 
-        </section>
-
-    </main>
-
-
-    <script src="plan.js"></script>
-    <script src="questions.js"></script>
-    <script src="app.js"></script>
+<script src="plan.js"></script>
+<script src="questions.js"></script>
+<script src="app.js"></script>
 
 </body>
-
 </html>
