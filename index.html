@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>国网2027备考</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20260815-3">
 </head>
 <body>
 
@@ -56,7 +56,6 @@
 
 <main>
 
-    <!-- 学习打卡：默认收起，只占很小区域 -->
     <section class="compact-section">
         <details id="study-checkin">
             <summary class="compact-summary">
@@ -72,7 +71,6 @@
         </details>
     </section>
 
-    <!-- 复习主区域 -->
     <section class="review-main">
         <div class="section-title review-title-row">
             <div>
@@ -86,7 +84,6 @@
         <div id="quiz-area"></div>
     </section>
 
-    <!-- 已解锁范围：默认收起 -->
     <section class="compact-section">
         <details id="review-pool-book">
             <summary class="compact-summary">
@@ -102,7 +99,6 @@
         </details>
     </section>
 
-    <!-- 错题本：默认收起 -->
     <section class="compact-section">
         <details id="wrong-book">
             <summary class="compact-summary">
@@ -120,9 +116,94 @@
 
 </main>
 
-<script src="plan.js"></script>
-<script src="questions.js"></script>
-<script src="app.js"></script>
+<!-- 机考计算器：右下角悬浮 -->
+<button id="calculator-launcher" class="calculator-launcher" type="button" aria-controls="calculator-panel" aria-expanded="false">
+    计算器
+</button>
+
+<section id="calculator-panel" class="calculator-panel" aria-label="机考科学计算器" hidden>
+    <div id="calculator-drag-handle" class="calculator-titlebar">
+        <strong>计算器</strong>
+        <span class="calculator-title-note">机考练习</span>
+        <button id="calculator-close" class="calculator-window-button" type="button" aria-label="关闭计算器">×</button>
+    </div>
+
+    <div class="calculator-body">
+        <div class="calculator-display-wrap">
+            <div id="calculator-history" class="calculator-history"></div>
+            <input id="calculator-display" class="calculator-display" type="text" value="0" readonly aria-label="计算器显示屏">
+        </div>
+
+        <div class="calculator-mode-row" aria-label="角度模式">
+            <label><input type="radio" name="calculator-angle" value="deg" checked> 度</label>
+            <label><input type="radio" name="calculator-angle" value="rad"> 弧度</label>
+            <span id="calculator-memory-indicator" class="calculator-memory-indicator"></span>
+        </div>
+
+        <div id="calculator-grid" class="calculator-grid">
+            <button type="button" data-action="memory-clear">MC</button>
+            <button type="button" data-action="memory-recall">MR</button>
+            <button type="button" data-action="memory-store">MS</button>
+            <button type="button" data-action="memory-add">M+</button>
+            <button type="button" data-action="memory-subtract">M−</button>
+            <button type="button" data-action="clear">C</button>
+
+            <button type="button" data-action="inverse" id="calculator-inverse">Inv</button>
+            <button type="button" data-function="ln">ln</button>
+            <button type="button" data-value="(">(</button>
+            <button type="button" data-value=")">)</button>
+            <button type="button" data-action="backspace">⌫</button>
+            <button type="button" data-operator="/">÷</button>
+
+            <button type="button" data-function="int">Int</button>
+            <button type="button" data-function="sinh">sinh</button>
+            <button type="button" data-function="sin">sin</button>
+            <button type="button" data-function="square">x²</button>
+            <button type="button" data-function="factorial">n!</button>
+            <button type="button" data-operator="*">×</button>
+
+            <button type="button" data-constant="pi">π</button>
+            <button type="button" data-function="cosh">cosh</button>
+            <button type="button" data-function="cos">cos</button>
+            <button type="button" data-operator="power">xʸ</button>
+            <button type="button" data-function="sqrt">√</button>
+            <button type="button" data-operator="-">−</button>
+
+            <button type="button" data-constant="e">e</button>
+            <button type="button" data-function="tanh">tanh</button>
+            <button type="button" data-function="tan">tan</button>
+            <button type="button" data-function="cube">x³</button>
+            <button type="button" data-function="reciprocal">1/x</button>
+            <button type="button" data-operator="+">+</button>
+
+            <button type="button" data-function="log">log</button>
+            <button type="button" data-function="exp">eˣ</button>
+            <button type="button" data-operator="mod">Mod</button>
+            <button type="button" data-action="percent">%</button>
+            <button type="button" data-function="cuberoot">∛</button>
+            <button type="button" data-action="sign">±</button>
+
+            <button type="button" data-value="7">7</button>
+            <button type="button" data-value="8">8</button>
+            <button type="button" data-value="9">9</button>
+            <button type="button" data-value="4">4</button>
+            <button type="button" data-value="5">5</button>
+            <button type="button" data-value="6">6</button>
+
+            <button type="button" data-value="1">1</button>
+            <button type="button" data-value="2">2</button>
+            <button type="button" data-value="3">3</button>
+            <button type="button" data-value="0" class="calculator-zero">0</button>
+            <button type="button" data-value=".">.</button>
+            <button type="button" data-action="equals" class="calculator-equals">=</button>
+        </div>
+    </div>
+</section>
+
+<script src="plan.js?v=20260815-3"></script>
+<script src="questions.js?v=20260815-3"></script>
+<script src="app.js?v=20260815-3"></script>
+<script src="calculator.js?v=20260815-3"></script>
 
 </body>
 </html>
