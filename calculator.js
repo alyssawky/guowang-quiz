@@ -102,13 +102,46 @@
         justEvaluated = true;
     }
 
+    function parenthesesBalance() {
+        const open = (expression.match(/\(/g) || []).length;
+        const close = (expression.match(/\)/g) || []).length;
+        return open - close;
+    }
+
     function appendValue(value) {
-        if (justEvaluated && /[0-9.(]/.test(value)) {
+        // 只有输入新的数字/小数点时，才把“刚计算出的结果”当作新一轮输入清掉。
+        // 左括号不能触发清空，否则 140 ÷ (1 + 0.5) 会丢失前面的 140 ÷。
+        if (justEvaluated && /[0-9.]/.test(value)) {
             expression = "";
             history.textContent = "";
         }
 
         justEvaluated = false;
+
+        if (value === "(") {
+            // 数字、右括号后直接接左括号时，自动理解为乘法；
+            // 运算符后接左括号则原样保留，例如 140/( 。
+            if (expression && /[0-9.)]$/.test(expression)) {
+                expression += "*";
+            }
+
+            expression += "(";
+            updateDisplay();
+            return;
+        }
+
+        if (value === ")") {
+            // 只有存在尚未闭合的左括号，并且前面是可结束的数值时才允许闭合。
+            if (
+                parenthesesBalance() > 0 &&
+                expression &&
+                !/(\*\*|[+\-*/%(])$/.test(expression)
+            ) {
+                expression += ")";
+                updateDisplay();
+            }
+            return;
+        }
 
         if (value === ".") {
             const currentNumber = expression.split(/\*\*|[+\-*/%()]/).pop();
@@ -121,7 +154,8 @@
             }
         }
 
-        if (value === "(" && expression && /[0-9.)]$/.test(expression)) {
+        // 右括号后直接输入数字时自动视为乘法。
+        if (/^[0-9]$/.test(value) && expression.endsWith(")")) {
             expression += "*";
         }
 
@@ -342,7 +376,9 @@
     function handleMemory(action) {
         switch (action) {
             case "memory-clear":
+                // 按当前练习习惯：MC 同时清空内存和当前输入。
                 memory = 0;
+                clearAll();
                 break;
             case "memory-recall":
                 appendConstant(memory);
