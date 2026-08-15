@@ -13,87 +13,202 @@
 <body>
 
     <header>
+
         <div class="header-content">
-            <p class="small-title">STATE GRID 2027</p>
-            <h1>国网备考</h1>
-            <p class="subtitle">学习 · 复习 · 掌握</p>
+
+            <p class="small-title">
+                STATE GRID 2027
+            </p>
+
+            <h1>
+                国网备考
+            </h1>
+
+            <p class="subtitle">
+                学习 · 复习 · 掌握
+            </p>
+
         </div>
+
     </header>
 
 
     <main>
 
+
+        <!-- ============================= -->
+        <!-- 顶部统计 -->
+        <!-- ============================= -->
+
         <section class="summary-card">
 
             <div>
-                <span class="summary-number" id="completed-count">0</span>
-                <span class="summary-label">已完成</span>
+
+                <span
+                    class="summary-number"
+                    id="completed-count"
+                >
+                    0
+                </span>
+
+                <span class="summary-label">
+                    已完成
+                </span>
+
             </div>
 
-            <div>
-                <span class="summary-number" id="review-count">0</span>
-                <span class="summary-label">可复习</span>
-            </div>
 
             <div>
-                <span class="summary-number" id="total-count">0</span>
-                <span class="summary-label">总任务</span>
+
+                <span
+                    class="summary-number"
+                    id="review-count"
+                >
+                    0
+                </span>
+
+                <span class="summary-label">
+                    可复习
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <span
+                    class="summary-number"
+                    id="total-count"
+                >
+                    0
+                </span>
+
+                <span class="summary-label">
+                    总任务
+                </span>
+
             </div>
 
         </section>
 
 
+
+        <!-- ============================= -->
         <!-- 当前学习计划 -->
+        <!-- ============================= -->
 
         <section>
 
             <div class="section-title">
-                <h2>当前学习计划</h2>
-                <p>完成学习后，点击“标记完成”</p>
+
+                <h2>
+                    当前学习计划
+                </h2>
+
+                <p>
+                    完成学习后，点击“标记完成”
+                </p>
+
             </div>
+
 
             <div id="task-list"></div>
 
         </section>
 
 
+
+        <!-- ============================= -->
         <!-- 已解锁复习 -->
+        <!-- ============================= -->
 
         <section>
 
             <div class="section-title">
-                <h2>已解锁复习</h2>
-                <p>只有已经学习过的内容会出现在这里</p>
+
+                <h2>
+                    已解锁复习
+                </h2>
+
+                <p>
+                    只有已经学习过的内容会出现在这里
+                </p>
+
             </div>
+
 
             <div id="review-list"></div>
 
         </section>
 
 
+
+        <!-- ============================= -->
         <!-- 开始复习 -->
+        <!-- ============================= -->
 
         <section>
 
             <div class="section-title">
-                <h2>开始复习</h2>
-                <p>只会出现你已经完成学习的内容对应的题目</p>
+
+                <h2>
+                    开始复习
+                </h2>
+
+                <p>
+                    只会出现你已经完成学习的内容对应的题目
+                </p>
+
             </div>
+
 
             <button id="start-review-btn">
                 开始复习
             </button>
 
+
             <div id="quiz-area"></div>
 
         </section>
 
+
+
+        <!-- ============================= -->
+        <!-- 错题本 -->
+        <!-- ============================= -->
+
+        <section>
+
+            <div class="section-title">
+
+                <h2>
+                    错题本
+                </h2>
+
+                <p>
+                    自动记录曾经答错的题目和历史正确率
+                </p>
+
+            </div>
+
+
+            <div id="wrong-list"></div>
+
+        </section>
+
+
     </main>
 
 
+
+    <!-- 数据文件 -->
+
     <script src="plan.js"></script>
+
     <script src="questions.js"></script>
+
     <script src="app.js"></script>
+
 
 </body>
 
