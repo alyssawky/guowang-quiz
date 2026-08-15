@@ -5,6 +5,7 @@ function questionIsMultiple(question) {
 }
 
 function getQuestionTypeLabel(question) {
+    if (question.type === "judge") return "判断题";
     return questionIsMultiple(question) ? "多选题" : "单选题";
 }
 
@@ -14,15 +15,68 @@ function getPriorityLabel(priority) {
     return labels[priority] || priority;
 }
 
+function questionUsesLetterOnlyOptions(question) {
+    return Boolean(question.optionLabelsOnly || question.imageOnlyOptions);
+}
+
 function optionDisplayText(originalKeys) {
     const keys = Array.isArray(originalKeys)
         ? originalKeys
         : String(originalKeys || "").split("");
 
+    const activeQuestion = currentReviewQuestions[currentQuestionIndex];
+    const labelsOnly = activeQuestion && questionUsesLetterOnlyOptions(activeQuestion);
+
     return currentOptionOrder
         .filter(option => keys.includes(option.originalKey))
-        .map(option => `${option.displayKey}. ${option.value}`)
+        .map(option => labelsOnly ? option.displayKey : `${option.displayKey}. ${option.value}`)
         .join("；");
+}
+
+function renderQuestionImage(question) {
+    if (question.questionImage) {
+        const img = question.questionImage;
+        const x = Number(img.x || 0);
+        const y = Number(img.y || 0);
+        const w = Number(img.w || img.sheetW || 1);
+        const h = Number(img.h || img.sheetH || 1);
+        const sheetW = Number(img.sheetW || w);
+        const sheetH = Number(img.sheetH || h);
+
+        return `
+            <div class="question-image-wrap">
+                <svg
+                    class="question-original-svg"
+                    viewBox="${x} ${y} ${w} ${h}"
+                    role="img"
+                    aria-label="${question.sourceId || question.question || "原题"}"
+                    preserveAspectRatio="xMidYMid meet"
+                >
+                    <image
+                        href="${img.sprite}"
+                        x="0"
+                        y="0"
+                        width="${sheetW}"
+                        height="${sheetH}"
+                    ></image>
+                </svg>
+            </div>
+        `;
+    }
+
+    if (question.image) {
+        return `
+            <div class="question-image-wrap">
+                <img
+                    class="question-original-image"
+                    src="${question.image}"
+                    alt="${question.sourceId || question.question || "原题"}"
+                >
+            </div>
+        `;
+    }
+
+    return "";
 }
 
 function renderQuestion() {
@@ -34,42 +88,55 @@ function renderQuestion() {
 
     const task = studyPlan.find(item => item.id === question.taskId);
     const isMultiple = questionIsMultiple(question);
+    const labelsOnly = questionUsesLetterOnlyOptions(question);
 
     currentMultipleSelection = new Set();
 
-    const shuffledOptions = shuffleArray(Object.entries(question.options));
-    const displayLabels = ["A", "B", "C", "D"];
+    const rawOptions = Object.entries(question.options || {});
+    const shouldShuffle = question.lockOptionOrder
+        ? false
+        : question.shuffleOptions !== false;
 
-    currentOptionOrder = shuffledOptions.map(
+    const orderedOptions = shouldShuffle
+        ? shuffleArray(rawOptions)
+        : rawOptions;
+
+    const displayLabels = ["A", "B", "C", "D", "E", "F"];
+
+    currentOptionOrder = orderedOptions.map(
         ([originalKey, value], index) => ({
             originalKey,
-            displayKey: displayLabels[index],
+            displayKey: shouldShuffle ? displayLabels[index] : originalKey,
             value
         })
     );
 
     const optionsHTML = currentOptionOrder
         .map(option => {
+            const buttonText = labelsOnly
+                ? option.displayKey
+                : `${option.displayKey}. ${option.value}`;
+
             if (isMultiple) {
                 return `
                     <button
-                        class="option-btn multi-option-btn"
+                        class="option-btn multi-option-btn ${labelsOnly ? "image-letter-option" : ""}"
                         type="button"
                         data-original-key="${option.originalKey}"
                         onclick="toggleMultipleOption('${option.originalKey}', this)"
                     >
-                        ${option.displayKey}. ${option.value}
+                        ${buttonText}
                     </button>
                 `;
             }
 
             return `
                 <button
-                    class="option-btn"
+                    class="option-btn ${labelsOnly ? "image-letter-option" : ""}"
                     type="button"
                     onclick="checkAnswer('${option.originalKey}')"
                 >
-                    ${option.displayKey}. ${option.value}
+                    ${buttonText}
                 </button>
             `;
         })
@@ -81,6 +148,8 @@ function renderQuestion() {
         getPriorityLabel(question.priority),
         question.topic || ""
     ].filter(Boolean);
+
+    const imageHTML = renderQuestionImage(question);
 
     quizArea.innerHTML = `
         <div class="task-card quiz-question-card">
@@ -103,9 +172,13 @@ function renderQuestion() {
 
                 <h3 class="question-title">${question.question}</h3>
 
+                ${imageHTML}
+
+                ${labelsOnly ? `<p class="image-answer-tip">原题题干和选项保留在题图中，请在下方选择对应字母。</p>` : ""}
+
                 ${isMultiple ? `<p class="multiple-tip">多选题：可选择多个答案，选好后点击“提交答案”。</p>` : ""}
 
-                <div class="question-options">
+                <div class="question-options ${labelsOnly ? "image-letter-options" : ""}">
                     ${optionsHTML}
                 </div>
 
@@ -199,7 +272,7 @@ function checkAnswer(selectedOriginalKeys) {
             ${!isCorrect ? `<p>你的答案：${selectedText || "未选择"}</p>` : ""}
 
             <p>正确答案：${correctText}</p>
-            <p>${question.explanation}</p>
+            <div class="answer-explanation">${question.explanation || ""}</div>
             ${noteHTML}
             <button onclick="nextQuestion()">下一题</button>
         </div>
