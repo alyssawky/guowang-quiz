@@ -1,0 +1,65 @@
+/* 国网机考计算器：接近 Windows 科学计算器的 10 列布局 */
+
+.calculator-panel {
+    width: min(760px, calc(100vw - 32px));
+    max-height: min(780px, calc(100vh - 100px));
+}
+
+.calculator-grid {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.calculator-grid button {
+    min-height: 46px;
+    padding: 7px 4px;
+    font-size: 14px;
+}
+
+/* MC / MR / MS / M+ / M- 五个按钮各占两格 */
+.calculator-grid .calculator-memory-key {
+    grid-column: span 2;
+}
+
+/* 参考 Windows 科学计算器第一格的空位 */
+.calculator-spacer {
+    visibility: hidden;
+    min-height: 46px;
+}
+
+/* 0 键横跨两格 */
+.calculator-grid .calculator-zero-wide {
+    grid-column: span 2;
+}
+
+/* 等号占两行 */
+.calculator-grid .calculator-equals-tall {
+    grid-row: span 2;
+}
+
+.calculator-grid .calculator-equals {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+@media (max-width: 800px) {
+    .calculator-panel {
+        width: calc(100vw - 24px);
+        right: 12px;
+    }
+
+    .calculator-grid {
+        gap: 4px;
+    }
+
+    .calculator-grid button,
+    .calculator-spacer {
+        min-height: 40px;
+    }
+
+    .calculator-grid button {
+        padding: 5px 2px;
+        font-size: 12px;
+    }
+}
