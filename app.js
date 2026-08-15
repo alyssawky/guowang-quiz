@@ -58,9 +58,6 @@ function loadProgress() {
     }
 
 
-    // 如果以后 plan.js 增加新任务，
-    // 自动补进去，不覆盖已有进度。
-
     studyPlan.forEach(task => {
 
         if (!(task.id in savedProgress)) {
@@ -158,8 +155,6 @@ function recordAnswer(
     questionId,
     isCorrect
 ) {
-
-    // 第一次做这道题时创建记录
 
     if (!answerHistory[questionId]) {
 
@@ -391,11 +386,8 @@ function renderReviewPool() {
         card.innerHTML = `
 
             <strong>
-
                 ${task.name}
-
             </strong>
-
 
             <span>
 
@@ -422,7 +414,146 @@ function renderReviewPool() {
 
 
 // ==================================================
+// 生成单张错题卡片
+// ==================================================
+
+function createWrongQuestionCard(
+    question,
+    record,
+    task
+) {
+
+    const attempts =
+        Number(
+            record.attempts || 0
+        );
+
+
+    const correct =
+        Number(
+            record.correct || 0
+        );
+
+
+    const wrong =
+        Number(
+            record.wrong || 0
+        );
+
+
+    const accuracy =
+        attempts > 0
+
+            ? Math.round(
+                (
+                    correct /
+                    attempts
+                ) *
+                100
+            )
+
+            : 0;
+
+
+    const lastResult =
+        record.lastCorrect === true
+
+            ? "正确"
+
+            : record.lastCorrect === false
+
+                ? "错误"
+
+                : "暂无";
+
+
+    const card =
+        document.createElement(
+            "div"
+        );
+
+
+    card.className =
+        "review-card";
+
+
+    card.style.marginTop =
+        "10px";
+
+
+    card.innerHTML = `
+
+        <div
+            style="width: 100%;"
+        >
+
+            <div class="task-module">
+
+                ${
+                    task
+                        ? `${task.category} · ${task.module}`
+                        : ""
+                }
+
+            </div>
+
+
+            <strong
+                style="
+                    display: block;
+                    margin-top: 8px;
+                    line-height: 1.6;
+                "
+            >
+
+                ${question.question}
+
+            </strong>
+
+
+            <div
+                style="
+                    margin-top: 12px;
+                    color: #667085;
+                    font-size: 14px;
+                    line-height: 1.8;
+                "
+            >
+
+                做题 ${attempts} 次
+
+                ｜ 正确 ${correct}
+
+                ｜ 错误 ${wrong}
+
+                ｜ 正确率 ${accuracy}%
+
+                <br>
+
+                最近一次：${lastResult}
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    return card;
+
+}
+
+
+// ==================================================
 // 显示错题本
+//
+// 错题本
+//   ↓
+// 行测 / 计算机
+//   ↓
+// 资料分析 / 判断推理 / 数据表示...
+//   ↓
+// 具体错题
 // ==================================================
 
 function renderWrongList() {
@@ -430,6 +561,12 @@ function renderWrongList() {
     const container =
         document.getElementById(
             "wrong-list"
+        );
+
+
+    const countElement =
+        document.getElementById(
+            "wrong-total-count"
         );
 
 
@@ -444,26 +581,42 @@ function renderWrongList() {
 
 
     // 只要历史上错过至少一次，
-    // 就进入错题本。
+    // 就保留在错题本。
 
     const wrongQuestions =
-        questions.filter(question => {
+        questions.filter(
+            question => {
 
-            const record =
-                answerHistory[
-                    question.id
-                ];
-
-
-            return Boolean(
-                record &&
-                Number(record.wrong) > 0
-            );
-
-        });
+                const record =
+                    answerHistory[
+                        question.id
+                    ];
 
 
-    if (wrongQuestions.length === 0) {
+                return Boolean(
+                    record &&
+                    Number(
+                        record.wrong
+                    ) > 0
+                );
+
+            }
+        );
+
+
+    // 更新错题总数
+
+    if (countElement) {
+
+        countElement.textContent =
+            `${wrongQuestions.length} 道`;
+
+    }
+
+
+    if (
+        wrongQuestions.length === 0
+    ) {
 
         container.innerHTML = `
 
@@ -475,156 +628,415 @@ function renderWrongList() {
 
         `;
 
+
         return;
+
     }
 
 
-    wrongQuestions.forEach(question => {
+    // ==================================================
+    // 按 category → module 分组
+    // ==================================================
 
-        const record =
-            answerHistory[
-                question.id
-            ];
+    const grouped = {};
 
 
-        const task =
-            studyPlan.find(
-                task =>
-                    task.id ===
-                    question.taskId
+    wrongQuestions.forEach(
+        question => {
+
+            const task =
+                studyPlan.find(
+                    item =>
+                        item.id ===
+                        question.taskId
+                );
+
+
+            const category =
+                task
+                    ? task.category
+                    : "其他";
+
+
+            const module =
+                task
+                    ? task.module
+                    : "未分类";
+
+
+            if (!grouped[category]) {
+
+                grouped[category] = {};
+
+            }
+
+
+            if (
+                !grouped[category][module]
+            ) {
+
+                grouped[category][module] =
+                    [];
+
+            }
+
+
+            grouped[category][module]
+                .push({
+
+                    question:
+                        question,
+
+                    task:
+                        task,
+
+                    record:
+                        answerHistory[
+                            question.id
+                        ]
+
+                });
+
+        }
+    );
+
+
+    // ==================================================
+    // category 顺序尽量跟 plan.js 一致
+    // ==================================================
+
+    const categoryOrder = [];
+
+
+    studyPlan.forEach(task => {
+
+        if (
+            !categoryOrder.includes(
+                task.category
+            )
+        ) {
+
+            categoryOrder.push(
+                task.category
             );
 
-
-        const attempts =
-            Number(
-                record.attempts || 0
-            );
-
-
-        const correct =
-            Number(
-                record.correct || 0
-            );
-
-
-        const wrong =
-            Number(
-                record.wrong || 0
-            );
-
-
-        const accuracy =
-            attempts > 0
-
-                ? Math.round(
-                    correct /
-                    attempts *
-                    100
-                )
-
-                : 0;
-
-
-        const card =
-            document.createElement(
-                "div"
-            );
-
-
-        card.className =
-            "review-card";
-
-
-        card.innerHTML = `
-
-            <div style="width: 100%;">
-
-
-                <div class="task-module">
-
-                    ${
-                        task
-                            ? `${task.category} · ${task.module}`
-                            : ""
-                    }
-
-                </div>
-
-
-                <strong
-                    style="
-                        display: block;
-                        margin-top: 8px;
-                        line-height: 1.6;
-                    "
-                >
-
-                    ${question.question}
-
-                </strong>
-
-
-                <div
-                    style="
-                        margin-top: 14px;
-                        line-height: 1.9;
-                    "
-                >
-
-                    <span>
-                        做题次数：
-                        ${attempts}
-                    </span>
-
-                    <br>
-
-
-                    <span>
-                        正确：
-                        ${correct}
-                    </span>
-
-                    <br>
-
-
-                    <span>
-                        错误：
-                        ${wrong}
-                    </span>
-
-                    <br>
-
-
-                    <span>
-                        正确率：
-                        ${accuracy}%
-                    </span>
-
-                    <br>
-
-
-                    <span>
-                        最近一次：
-                        ${
-                            record.lastCorrect === true
-                                ? "正确"
-                                : record.lastCorrect === false
-                                    ? "错误"
-                                    : "暂无"
-                        }
-                    </span>
-
-                </div>
-
-
-            </div>
-
-        `;
-
-
-        container.appendChild(card);
+        }
 
     });
+
+
+    Object.keys(grouped)
+        .forEach(category => {
+
+            if (
+                !categoryOrder.includes(
+                    category
+                )
+            ) {
+
+                categoryOrder.push(
+                    category
+                );
+
+            }
+
+        });
+
+
+    // ==================================================
+    // 建立 category 折叠层
+    // ==================================================
+
+    categoryOrder.forEach(
+        category => {
+
+            if (!grouped[category]) {
+
+                return;
+
+            }
+
+
+            const categoryModules =
+                grouped[category];
+
+
+            const categoryCount =
+                Object
+                    .values(
+                        categoryModules
+                    )
+                    .reduce(
+                        (
+                            sum,
+                            items
+                        ) =>
+                            sum +
+                            items.length,
+
+                        0
+                    );
+
+
+            const categoryDetails =
+                document.createElement(
+                    "details"
+                );
+
+
+            /*
+                不设置 open，
+                所以默认收起。
+            */
+
+            categoryDetails.style.marginBottom =
+                "14px";
+
+
+            categoryDetails.style.background =
+                "white";
+
+
+            categoryDetails.style.borderRadius =
+                "16px";
+
+
+            categoryDetails.style.padding =
+                "18px 20px";
+
+
+            const categorySummary =
+                document.createElement(
+                    "summary"
+                );
+
+
+            categorySummary.style.cursor =
+                "pointer";
+
+
+            categorySummary.style.fontWeight =
+                "600";
+
+
+            categorySummary.style.fontSize =
+                "18px";
+
+
+            categorySummary.innerHTML = `
+
+                ${category}
+
+                <span
+                    style="
+                        margin-left: 8px;
+                        color: #86868b;
+                        font-size: 13px;
+                        font-weight: 400;
+                    "
+                >
+
+                    ${categoryCount} 道
+
+                </span>
+
+            `;
+
+
+            categoryDetails.appendChild(
+                categorySummary
+            );
+
+
+            // ==================================================
+            // module 顺序也按 plan.js
+            // ==================================================
+
+            const moduleOrder = [];
+
+
+            studyPlan
+
+                .filter(
+                    task =>
+                        task.category ===
+                        category
+                )
+
+                .forEach(
+                    task => {
+
+                        if (
+                            !moduleOrder
+                                .includes(
+                                    task.module
+                                )
+                        ) {
+
+                            moduleOrder.push(
+                                task.module
+                            );
+
+                        }
+
+                    }
+                );
+
+
+            Object
+                .keys(
+                    categoryModules
+                )
+                .forEach(
+                    module => {
+
+                        if (
+                            !moduleOrder
+                                .includes(
+                                    module
+                                )
+                        ) {
+
+                            moduleOrder.push(
+                                module
+                            );
+
+                        }
+
+                    }
+                );
+
+
+            // ==================================================
+            // 建立 module 折叠层
+            // ==================================================
+
+            moduleOrder.forEach(
+                module => {
+
+                    const items =
+                        categoryModules[
+                            module
+                        ];
+
+
+                    if (
+                        !items ||
+                        items.length === 0
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    const moduleDetails =
+                        document.createElement(
+                            "details"
+                        );
+
+
+                    /*
+                        仍然不设置 open，
+                        所以 module 也是默认收起。
+                    */
+
+                    moduleDetails.style.marginTop =
+                        "14px";
+
+
+                    moduleDetails.style.background =
+                        "#f7f8fa";
+
+
+                    moduleDetails.style.borderRadius =
+                        "12px";
+
+
+                    moduleDetails.style.padding =
+                        "14px 16px";
+
+
+                    const moduleSummary =
+                        document.createElement(
+                            "summary"
+                        );
+
+
+                    moduleSummary.style.cursor =
+                        "pointer";
+
+
+                    moduleSummary.style.fontWeight =
+                        "500";
+
+
+                    moduleSummary.innerHTML = `
+
+                        ${module}
+
+                        <span
+                            style="
+                                margin-left: 8px;
+                                color: #86868b;
+                                font-size: 13px;
+                                font-weight: 400;
+                            "
+                        >
+
+                            ${items.length} 道
+
+                        </span>
+
+                    `;
+
+
+                    moduleDetails.appendChild(
+                        moduleSummary
+                    );
+
+
+                    // ==================================================
+                    // 具体错题
+                    // ==================================================
+
+                    items.forEach(
+                        item => {
+
+                            moduleDetails
+                                .appendChild(
+
+                                    createWrongQuestionCard(
+
+                                        item.question,
+
+                                        item.record,
+
+                                        item.task
+
+                                    )
+
+                                );
+
+                        }
+                    );
+
+
+                    categoryDetails
+                        .appendChild(
+                            moduleDetails
+                        );
+
+                }
+            );
+
+
+            container.appendChild(
+                categoryDetails
+            );
+
+        }
+    );
 
 }
 
@@ -644,26 +1056,29 @@ function renderSummary() {
         ).length;
 
 
-    // 可复习：
-    // 已经完成学习，并且题库里有题
-
     const reviewable =
-        studyPlan.filter(task => {
+        studyPlan.filter(
+            task => {
 
-            if (!progress[task.id]) {
+                if (
+                    !progress[
+                        task.id
+                    ]
+                ) {
 
-                return false;
+                    return false;
+
+                }
+
+
+                return questions.some(
+                    question =>
+                        question.taskId ===
+                        task.id
+                );
 
             }
-
-
-            return questions.some(
-                question =>
-                    question.taskId ===
-                    task.id
-            );
-
-        }).length;
+        ).length;
 
 
     const completedElement =
@@ -733,39 +1148,45 @@ function buildReviewQuestions() {
     /*
         规则：
 
-        1. 未学习内容绝不出题。
-        2. 不同学习板块按 plan.js 顺序。
-        3. 同一学习板块内部随机出题。
+        1. 未学习内容绝不出题
+        2. 不同板块按 plan.js 顺序
+        3. 单个板块内部随机
     */
 
-    studyPlan.forEach(task => {
+    studyPlan.forEach(
+        task => {
 
-        if (!progress[task.id]) {
+            if (
+                !progress[
+                    task.id
+                ]
+            ) {
 
-            return;
+                return;
+
+            }
+
+
+            const taskQuestions =
+                questions.filter(
+                    question =>
+                        question.taskId ===
+                        task.id
+                );
+
+
+            const shuffledTaskQuestions =
+                shuffleArray(
+                    taskQuestions
+                );
+
+
+            reviewQuestions.push(
+                ...shuffledTaskQuestions
+            );
 
         }
-
-
-        const taskQuestions =
-            questions.filter(
-                question =>
-                    question.taskId ===
-                    task.id
-            );
-
-
-        const shuffledTaskQuestions =
-            shuffleArray(
-                taskQuestions
-            );
-
-
-        reviewQuestions.push(
-            ...shuffledTaskQuestions
-        );
-
-    });
+    );
 
 
     return reviewQuestions;
@@ -783,7 +1204,8 @@ function startReview() {
         buildReviewQuestions();
 
 
-    currentQuestionIndex = 0;
+    currentQuestionIndex =
+        0;
 
 
     const quizArea =
@@ -800,7 +1222,8 @@ function startReview() {
 
 
     if (
-        currentReviewQuestions.length === 0
+        currentReviewQuestions.length ===
+        0
     ) {
 
         quizArea.innerHTML = `
@@ -813,7 +1236,9 @@ function startReview() {
 
         `;
 
+
         return;
+
     }
 
 
@@ -856,8 +1281,8 @@ function renderQuestion() {
 
     const task =
         studyPlan.find(
-            task =>
-                task.id ===
+            item =>
+                item.id ===
                 question.taskId
         );
 
@@ -879,42 +1304,49 @@ function renderQuestion() {
 
 
     const displayLabels =
-        ["A", "B", "C", "D"];
+        [
+            "A",
+            "B",
+            "C",
+            "D"
+        ];
 
 
     currentOptionOrder =
         shuffledOptions.map(
             (
-                [originalKey, value],
+                [
+                    originalKey,
+                    value
+                ],
                 index
-            ) => {
+            ) => ({
 
-                return {
+                originalKey:
+                    originalKey,
 
-                    originalKey:
-                        originalKey,
+                displayKey:
+                    displayLabels[
+                        index
+                    ],
 
-                    displayKey:
-                        displayLabels[index],
+                value:
+                    value
 
-                    value:
-                        value
-
-                };
-
-            }
+            })
         );
 
 
     const optionsHTML =
         currentOptionOrder
 
-            .map(option => {
-
-                return `
+            .map(
+                option => `
 
                     <button
+
                         class="option-btn"
+
                         onclick="
                             checkAnswer(
                                 '${option.originalKey}',
@@ -928,9 +1360,8 @@ function renderQuestion() {
 
                     </button>
 
-                `;
-
-            })
+                `
+            )
 
             .join("");
 
@@ -940,21 +1371,29 @@ function renderQuestion() {
         <div class="task-card">
 
 
-            <div style="width: 100%;">
+            <div
+                style="width: 100%;"
+            >
 
 
-                <div class="task-module">
+                <div
+                    class="task-module"
+                >
 
                     ${
                         task
+
                             ? `${task.category} · ${task.module}`
+
                             : ""
                     }
 
                 </div>
 
 
-                <div class="task-week">
+                <div
+                    class="task-week"
+                >
 
                     ${
                         task
@@ -968,9 +1407,14 @@ function renderQuestion() {
                 <p>
 
                     第
-                    ${currentQuestionIndex + 1}
+                    ${
+                        currentQuestionIndex +
+                        1
+                    }
                     /
-                    ${currentReviewQuestions.length}
+                    ${
+                        currentReviewQuestions.length
+                    }
                     题
 
                 </p>
@@ -984,6 +1428,7 @@ function renderQuestion() {
 
 
                 <div
+
                     style="
                         display: grid;
                         gap: 10px;
@@ -997,11 +1442,14 @@ function renderQuestion() {
 
 
                 <div
+
                     id="answer-feedback"
+
                     style="
                         margin-top: 20px;
                     "
                 >
+
                 </div>
 
 
@@ -1055,9 +1503,7 @@ function checkAnswer(
         question.answer;
 
 
-    // ==================================================
-    // 保存答题记录
-    // ==================================================
+    // 保存记录
 
     recordAnswer(
         question.id,
@@ -1065,7 +1511,7 @@ function checkAnswer(
     );
 
 
-    // 立即刷新错题本
+    // 错题本立即更新
 
     renderWrongList();
 
@@ -1086,18 +1532,20 @@ function checkAnswer(
         );
 
 
-    // 回答后锁定全部选项，
-    // 避免同一道题被重复记录。
+    // 防止重复点击
 
     document
         .querySelectorAll(
             ".option-btn"
         )
-        .forEach(button => {
+        .forEach(
+            button => {
 
-            button.disabled = true;
+                button.disabled =
+                    true;
 
-        });
+            }
+        );
 
 
     // ==================================================
@@ -1109,7 +1557,6 @@ function checkAnswer(
         feedback.innerHTML = `
 
             <div class="review-card">
-
 
                 <strong>
 
@@ -1145,13 +1592,14 @@ function checkAnswer(
 
 
                 <button
-                    onclick="nextQuestion()"
+                    onclick="
+                        nextQuestion()
+                    "
                 >
 
                     下一题
 
                 </button>
-
 
             </div>
 
@@ -1169,7 +1617,6 @@ function checkAnswer(
         feedback.innerHTML = `
 
             <div class="review-card">
-
 
                 <strong>
 
@@ -1224,13 +1671,14 @@ function checkAnswer(
 
 
                 <button
-                    onclick="nextQuestion()"
+                    onclick="
+                        nextQuestion()
+                    "
                 >
 
                     下一题
 
                 </button>
-
 
             </div>
 
@@ -1272,7 +1720,6 @@ function nextQuestion() {
 
             <div class="review-card">
 
-
                 <strong>
 
                     本次复习完成 ✓
@@ -1283,20 +1730,23 @@ function nextQuestion() {
                 <p>
 
                     共完成
-                    ${currentReviewQuestions.length}
+                    ${
+                        currentReviewQuestions.length
+                    }
                     道题。
 
                 </p>
 
 
                 <button
-                    onclick="startReview()"
+                    onclick="
+                        startReview()
+                    "
                 >
 
                     再复习一次
 
                 </button>
-
 
             </div>
 
