@@ -1,4 +1,108 @@
 const STORAGE_KEY = "guowang-study-progress";
+const ANSWER_HISTORY_KEY = "guowang-answer-history";
+
+
+// ==================================================
+// 读取答题记录
+// ==================================================
+
+function loadAnswerHistory() {
+
+    const saved =
+        localStorage.getItem(
+            ANSWER_HISTORY_KEY
+        );
+
+
+    if (!saved) {
+        return {};
+    }
+
+
+    try {
+
+        return JSON.parse(saved);
+
+    } catch (error) {
+
+        return {};
+
+    }
+
+}
+
+
+// ==================================================
+// 保存答题记录
+// ==================================================
+
+function saveAnswerHistory() {
+
+    localStorage.setItem(
+        ANSWER_HISTORY_KEY,
+        JSON.stringify(answerHistory)
+    );
+
+}
+
+
+let answerHistory =
+    loadAnswerHistory();
+
+
+// ==================================================
+// 记录每一道题的答题情况
+// ==================================================
+
+function recordAnswer(questionId, isCorrect) {
+
+    // 第一次做这道题时建立记录
+    if (!answerHistory[questionId]) {
+
+        answerHistory[questionId] = {
+            attempts: 0,
+            correct: 0,
+            wrong: 0,
+            lastCorrect: null,
+            lastAnsweredAt: null
+        };
+
+    }
+
+
+    const record =
+        answerHistory[questionId];
+
+
+    // 总做题次数
+    record.attempts++;
+
+
+    // 正确 / 错误次数
+    if (isCorrect) {
+
+        record.correct++;
+
+    } else {
+
+        record.wrong++;
+
+    }
+
+
+    // 最近一次结果
+    record.lastCorrect =
+        isCorrect;
+
+
+    // 最近一次答题时间
+    record.lastAnsweredAt =
+        new Date().toISOString();
+
+
+    saveAnswerHistory();
+
+}
 
 
 // ==================================================
@@ -9,11 +113,18 @@ function shuffleArray(array) {
 
     const newArray = [...array];
 
-    for (let i = newArray.length - 1; i > 0; i--) {
 
-        const j = Math.floor(
-            Math.random() * (i + 1)
-        );
+    for (
+        let i = newArray.length - 1;
+        i > 0;
+        i--
+    ) {
+
+        const j =
+            Math.floor(
+                Math.random() * (i + 1)
+            );
+
 
         [
             newArray[i],
@@ -22,9 +133,12 @@ function shuffleArray(array) {
             newArray[j],
             newArray[i]
         ];
+
     }
 
+
     return newArray;
+
 }
 
 
@@ -35,9 +149,13 @@ function shuffleArray(array) {
 function loadProgress() {
 
     const saved =
-        localStorage.getItem(STORAGE_KEY);
+        localStorage.getItem(
+            STORAGE_KEY
+        );
+
 
     let savedProgress = {};
+
 
     if (saved) {
 
@@ -51,14 +169,21 @@ function loadProgress() {
             savedProgress = {};
 
         }
+
     }
 
 
-    // 如果以后 plan.js 新增学习任务，
-    // 自动把新任务加入学习进度
+    /*
+        如果以后 plan.js 增加新任务，
+        只添加新任务，
+        不覆盖你原来已经保存的学习状态。
+    */
+
     studyPlan.forEach(task => {
 
-        if (!(task.id in savedProgress)) {
+        if (
+            !(task.id in savedProgress)
+        ) {
 
             savedProgress[task.id] =
                 task.defaultCompleted;
@@ -75,10 +200,12 @@ function loadProgress() {
 
 
     return savedProgress;
+
 }
 
 
-let progress = loadProgress();
+let progress =
+    loadProgress();
 
 
 // ==================================================
@@ -104,7 +231,9 @@ function toggleTask(taskId) {
     progress[taskId] =
         !progress[taskId];
 
+
     saveProgress();
+
 
     render();
 
@@ -121,6 +250,11 @@ function renderTasks() {
         document.getElementById(
             "task-list"
         );
+
+
+    if (!container) {
+        return;
+    }
 
 
     container.innerHTML = "";
@@ -172,8 +306,8 @@ function renderTasks() {
 
                 ${
                     completed
-                    ? "已完成"
-                    : "标记完成"
+                        ? "已完成"
+                        : "标记完成"
                 }
 
             </button>
@@ -189,7 +323,7 @@ function renderTasks() {
 
 
 // ==================================================
-// 显示已解锁复习内容
+// 显示已经解锁的复习内容
 // ==================================================
 
 function renderReviewPool() {
@@ -200,16 +334,24 @@ function renderReviewPool() {
         );
 
 
+    if (!container) {
+        return;
+    }
+
+
     container.innerHTML = "";
 
 
     const unlockedTasks =
         studyPlan.filter(
-            task => progress[task.id]
+            task =>
+                progress[task.id]
         );
 
 
-    if (unlockedTasks.length === 0) {
+    if (
+        unlockedTasks.length === 0
+    ) {
 
         container.innerHTML = `
 
@@ -220,6 +362,7 @@ function renderReviewPool() {
             </div>
 
         `;
+
 
         return;
 
@@ -249,8 +392,11 @@ function renderReviewPool() {
         card.innerHTML = `
 
             <strong>
+
                 ${task.name}
+
             </strong>
+
 
             <span>
 
@@ -260,8 +406,8 @@ function renderReviewPool() {
 
                 ${
                     questionCount > 0
-                    ? ` · ${questionCount} 道题`
-                    : " · 暂无题目"
+                        ? ` · ${questionCount} 道题`
+                        : " · 暂无题目"
                 }
 
             </span>
@@ -284,9 +430,16 @@ function renderSummary() {
 
     const completed =
         studyPlan.filter(
-            task => progress[task.id]
+            task =>
+                progress[task.id]
         ).length;
 
+
+    /*
+        “可复习”：
+        已经完成学习，
+        并且题库里确实有对应题目的任务数量。
+    */
 
     const reviewable =
         studyPlan.filter(task => {
@@ -297,6 +450,7 @@ function renderSummary() {
 
             }
 
+
             return questions.some(
                 question =>
                     question.taskId ===
@@ -306,42 +460,58 @@ function renderSummary() {
         }).length;
 
 
-    document
-        .getElementById(
+    const completedElement =
+        document.getElementById(
             "completed-count"
-        )
-        .textContent =
-        completed;
+        );
 
 
-    document
-        .getElementById(
+    const reviewElement =
+        document.getElementById(
             "review-count"
-        )
-        .textContent =
-        reviewable;
+        );
 
 
-    document
-        .getElementById(
+    const totalElement =
+        document.getElementById(
             "total-count"
-        )
-        .textContent =
-        studyPlan.length;
+        );
+
+
+    if (completedElement) {
+
+        completedElement.textContent =
+            completed;
+
+    }
+
+
+    if (reviewElement) {
+
+        reviewElement.textContent =
+            reviewable;
+
+    }
+
+
+    if (totalElement) {
+
+        totalElement.textContent =
+            studyPlan.length;
+
+    }
 
 }
 
 
 // ==================================================
-// 复习系统状态
+// 当前复习状态
 // ==================================================
 
 let currentReviewQuestions = [];
 
 let currentQuestionIndex = 0;
 
-
-// 当前题目的随机选项顺序
 let currentOptionOrder = [];
 
 
@@ -355,17 +525,18 @@ function buildReviewQuestions() {
 
 
     /*
-        按 studyPlan 的顺序处理学习任务。
+        按 plan.js 中的学习计划顺序处理。
 
-        这样：
-        不同学习板块仍然按照计划顺序出现，
+        不同学习板块之间：
+        保留学习计划顺序。
 
-        但每个板块内部的题目会随机排列。
+        同一个学习板块内部：
+        随机打乱题目。
     */
 
     studyPlan.forEach(task => {
 
-        // 没学过的内容直接跳过
+        // 没有完成学习的内容禁止出题
         if (!progress[task.id]) {
 
             return;
@@ -373,7 +544,6 @@ function buildReviewQuestions() {
         }
 
 
-        // 找到这个学习任务对应的全部题目
         const taskQuestions =
             questions.filter(
                 question =>
@@ -382,7 +552,6 @@ function buildReviewQuestions() {
             );
 
 
-        // 只随机这个板块内部的题目
         const shuffledTaskQuestions =
             shuffleArray(
                 taskQuestions
@@ -397,6 +566,7 @@ function buildReviewQuestions() {
 
 
     return reviewQuestions;
+
 }
 
 
@@ -419,6 +589,11 @@ function startReview() {
         );
 
 
+    if (!quizArea) {
+        return;
+    }
+
+
     if (
         currentReviewQuestions.length === 0
     ) {
@@ -432,6 +607,7 @@ function startReview() {
             </div>
 
         `;
+
 
         return;
 
@@ -455,10 +631,20 @@ function renderQuestion() {
         );
 
 
+    if (!quizArea) {
+        return;
+    }
+
+
     const question =
         currentReviewQuestions[
             currentQuestionIndex
         ];
+
+
+    if (!question) {
+        return;
+    }
 
 
     const task =
@@ -469,9 +655,9 @@ function renderQuestion() {
         );
 
 
-    // ----------------------------------------------
-    // 随机选项
-    // ----------------------------------------------
+    // ==================================================
+    // 随机排列当前题目的选项
+    // ==================================================
 
     const originalOptions =
         Object.entries(
@@ -485,20 +671,14 @@ function renderQuestion() {
         );
 
 
+    /*
+        无论原来选项是什么顺序，
+        页面上重新标记成 A/B/C/D。
+    */
+
     const displayLabels =
         ["A", "B", "C", "D"];
 
-
-    /*
-        originalKey：
-        原题里的答案编号，
-        用来判断真正的正确答案。
-
-        displayKey：
-        当前随机之后显示给你的 A/B/C/D。
-
-        所以正确答案字母每次都可能变化。
-    */
 
     currentOptionOrder =
         shuffledOptions.map(
@@ -526,29 +706,29 @@ function renderQuestion() {
 
     const optionsHTML =
         currentOptionOrder
-        .map(option => {
+            .map(option => {
 
-            return `
+                return `
 
-                <button
-                    class="option-btn"
-                    onclick="
-                        checkAnswer(
-                            '${option.originalKey}',
-                            '${option.displayKey}'
-                        )
-                    "
-                >
+                    <button
+                        class="option-btn"
+                        onclick="
+                            checkAnswer(
+                                '${option.originalKey}',
+                                '${option.displayKey}'
+                            )
+                        "
+                    >
 
-                    ${option.displayKey}.
-                    ${option.value}
+                        ${option.displayKey}.
+                        ${option.value}
 
-                </button>
+                    </button>
 
-            `;
+                `;
 
-        })
-        .join("");
+            })
+            .join("");
 
 
     quizArea.innerHTML = `
@@ -560,16 +740,22 @@ function renderQuestion() {
 
                 <div class="task-module">
 
-                    ${task.category}
-                    ·
-                    ${task.module}
+                    ${
+                        task
+                            ? `${task.category} · ${task.module}`
+                            : ""
+                    }
 
                 </div>
 
 
                 <div class="task-week">
 
-                    ${task.name}
+                    ${
+                        task
+                            ? task.name
+                            : ""
+                    }
 
                 </div>
 
@@ -636,13 +822,42 @@ function checkAnswer(
         ];
 
 
+    if (!question) {
+        return;
+    }
+
+
     const feedback =
         document.getElementById(
             "answer-feedback"
         );
 
 
-    // 找到用户选中的完整选项
+    if (!feedback) {
+        return;
+    }
+
+
+    // ==================================================
+    // 判断本题是否正确
+    // ==================================================
+
+    const isCorrect =
+        selectedOriginalKey ===
+        question.answer;
+
+
+    // ==================================================
+    // 把本次答案写入答题记录
+    // ==================================================
+
+    recordAnswer(
+        question.id,
+        isCorrect
+    );
+
+
+    // 用户选择的选项
     const selectedOption =
         currentOptionOrder.find(
             option =>
@@ -651,7 +866,7 @@ function checkAnswer(
         );
 
 
-    // 找到当前随机排列后的正确选项
+    // 当前随机顺序下的正确选项
     const correctOption =
         currentOptionOrder.find(
             option =>
@@ -660,7 +875,13 @@ function checkAnswer(
         );
 
 
-    // 防止同一道题反复点击
+    /*
+        一旦回答，
+        禁止重复点击选项。
+
+        这样同一道题不会被重复记录。
+    */
+
     document
         .querySelectorAll(
             ".option-btn"
@@ -672,14 +893,11 @@ function checkAnswer(
         });
 
 
-    // ----------------------------------------------
+    // ==================================================
     // 回答正确
-    // ----------------------------------------------
+    // ==================================================
 
-    if (
-        selectedOriginalKey ===
-        question.answer
-    ) {
+    if (isCorrect) {
 
         feedback.innerHTML = `
 
@@ -697,8 +915,17 @@ function checkAnswer(
 
                     正确答案：
 
-                    ${correctOption.displayKey}.
-                    ${correctOption.value}
+                    ${
+                        correctOption
+                            ? correctOption.displayKey
+                            : ""
+                    }.
+
+                    ${
+                        correctOption
+                            ? correctOption.value
+                            : ""
+                    }
 
                 </p>
 
@@ -726,9 +953,9 @@ function checkAnswer(
     }
 
 
-    // ----------------------------------------------
+    // ==================================================
     // 回答错误
-    // ----------------------------------------------
+    // ==================================================
 
     else {
 
@@ -748,8 +975,17 @@ function checkAnswer(
 
                     你的答案：
 
-                    ${selectedDisplayKey}.
-                    ${selectedOption.value}
+                    ${
+                        selectedOption
+                            ? selectedDisplayKey
+                            : ""
+                    }.
+
+                    ${
+                        selectedOption
+                            ? selectedOption.value
+                            : ""
+                    }
 
                 </p>
 
@@ -758,8 +994,17 @@ function checkAnswer(
 
                     正确答案：
 
-                    ${correctOption.displayKey}.
-                    ${correctOption.value}
+                    ${
+                        correctOption
+                            ? correctOption.displayKey
+                            : ""
+                    }.
+
+                    ${
+                        correctOption
+                            ? correctOption.value
+                            : ""
+                    }
 
                 </p>
 
@@ -803,41 +1048,50 @@ function nextQuestion() {
         currentReviewQuestions.length
     ) {
 
-        document
-            .getElementById(
+        const quizArea =
+            document.getElementById(
                 "quiz-area"
-            )
-            .innerHTML = `
-
-                <div class="review-card">
-
-                    <strong>
-
-                        本次复习完成 ✓
-
-                    </strong>
+            );
 
 
-                    <p>
-
-                        共完成
-                        ${currentReviewQuestions.length}
-                        道题。
-
-                    </p>
+        if (!quizArea) {
+            return;
+        }
 
 
-                    <button
-                        onclick="startReview()"
-                    >
+        quizArea.innerHTML = `
 
-                        再复习一次
+            <div class="review-card">
 
-                    </button>
 
-                </div>
+                <strong>
 
-            `;
+                    本次复习完成 ✓
+
+                </strong>
+
+
+                <p>
+
+                    共完成
+                    ${currentReviewQuestions.length}
+                    道题。
+
+                </p>
+
+
+                <button
+                    onclick="startReview()"
+                >
+
+                    再复习一次
+
+                </button>
+
+
+            </div>
+
+        `;
 
 
         return;
@@ -851,7 +1105,7 @@ function nextQuestion() {
 
 
 // ==================================================
-// 刷新页面内容
+// 刷新页面
 // ==================================================
 
 function render() {
