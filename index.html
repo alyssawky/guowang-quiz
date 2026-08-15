@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>国网2027备考</title>
     <link rel="stylesheet" href="style.css?v=20260815-5">
+    <link rel="stylesheet" href="calculator-layout.css?v=20260815-5">
 </head>
 <body>
 
@@ -99,14 +100,12 @@
         </div>
 
         <div id="calculator-grid" class="calculator-grid">
-            <!-- Memory：每个按钮占两格，共一整行 -->
             <button class="calculator-memory-key" type="button" data-action="memory-clear">MC</button>
             <button class="calculator-memory-key" type="button" data-action="memory-recall">MR</button>
             <button class="calculator-memory-key" type="button" data-action="memory-store">MS</button>
             <button class="calculator-memory-key" type="button" data-action="memory-add">M+</button>
             <button class="calculator-memory-key" type="button" data-action="memory-subtract">M−</button>
 
-            <!-- 控制行 -->
             <span class="calculator-spacer"></span>
             <button type="button" data-action="inverse" id="calculator-inverse">Inv</button>
             <button type="button" data-function="ln">ln</button>
@@ -118,7 +117,6 @@
             <button type="button" data-action="sign">±</button>
             <button type="button" data-function="sqrt">√</button>
 
-            <!-- 7 8 9 -->
             <button type="button" data-function="int">Int</button>
             <button type="button" data-function="sinh">sinh</button>
             <button type="button" data-function="sin">sin</button>
@@ -130,7 +128,6 @@
             <button type="button" data-operator="/">÷</button>
             <button type="button" data-action="percent">%</button>
 
-            <!-- 4 5 6 -->
             <button type="button" data-constant="e">e</button>
             <button type="button" data-function="cosh">cosh</button>
             <button type="button" data-function="cos">cos</button>
@@ -142,7 +139,6 @@
             <button type="button" data-operator="*">×</button>
             <button type="button" data-function="reciprocal">1/x</button>
 
-            <!-- 1 2 3 -->
             <button type="button" data-constant="pi">π</button>
             <button type="button" data-function="tanh">tanh</button>
             <button type="button" data-function="tan">tan</button>
@@ -154,7 +150,6 @@
             <button type="button" data-operator="-">−</button>
             <button type="button" data-action="equals" class="calculator-equals calculator-equals-tall">=</button>
 
-            <!-- 0 . + -->
             <button type="button" data-function="log">log</button>
             <button type="button" data-function="exp">eˣ</button>
             <button type="button" data-operator="mod">Mod</button>
