@@ -1,0 +1,118 @@
+/* 紧凑版机考计算器：覆盖 style.css 中的旧计算器尺寸 */
+
+.calculator-panel {
+    width: min(440px, calc(100vw - 28px)) !important;
+    max-height: min(590px, calc(100vh - 96px)) !important;
+    right: 18px;
+    bottom: 72px;
+    border-radius: 9px;
+}
+
+.calculator-titlebar {
+    min-height: 34px;
+    padding: 5px 7px 5px 10px;
+    gap: 7px;
+}
+
+.calculator-titlebar strong {
+    font-size: 12px;
+}
+
+.calculator-title-note {
+    font-size: 10px;
+}
+
+.calculator-window-button {
+    width: 27px;
+    height: 24px;
+    font-size: 17px;
+}
+
+.calculator-body {
+    padding: 8px;
+}
+
+.calculator-display-wrap {
+    padding: 4px 7px 5px;
+}
+
+.calculator-history {
+    min-height: 13px;
+    font-size: 9px;
+}
+
+.calculator-display {
+    font-size: 21px;
+}
+
+.calculator-mode-row {
+    min-height: 28px;
+    gap: 12px;
+    padding: 5px 1px 3px;
+    font-size: 10px;
+}
+
+/* 参考 Windows 科学计算器：10 列，左边科学函数，右边固定数字区 */
+.calculator-grid {
+    display: grid !important;
+    grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    gap: 4px !important;
+}
+
+.calculator-grid button {
+    min-width: 0 !important;
+    min-height: 32px !important;
+    padding: 4px 2px !important;
+    border-radius: 4px !important;
+    font-size: 10px !important;
+    line-height: 1.05;
+}
+
+.calculator-grid .calculator-memory-key {
+    grid-column: span 2;
+}
+
+.calculator-grid .calculator-spacer {
+    display: block;
+    min-height: 1px;
+}
+
+.calculator-grid .calculator-zero-wide {
+    grid-column: span 2;
+}
+
+.calculator-grid .calculator-equals {
+    font-size: 15px !important;
+    font-weight: 700;
+}
+
+.calculator-grid .calculator-equals-tall {
+    grid-row: span 2;
+}
+
+.calculator-launcher {
+    right: 18px;
+    bottom: 18px;
+    min-width: 72px;
+    padding: 8px 13px;
+    font-size: 12px;
+}
+
+@media (max-width: 560px) {
+    .calculator-panel {
+        width: calc(100vw - 18px) !important;
+        right: 9px;
+        bottom: 62px;
+        max-height: calc(100vh - 76px) !important;
+    }
+
+    .calculator-grid {
+        gap: 3px !important;
+    }
+
+    .calculator-grid button {
+        min-height: 30px !important;
+        font-size: 9px !important;
+    }
+}
