@@ -4,24 +4,37 @@
 
 body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
-                 "Microsoft YaHei", Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
     background: #f5f5f7;
     color: #1d1d1f;
 }
 
-header {
+.site-header {
     background: white;
     border-bottom: 1px solid #e5e5e5;
 }
 
 .header-content {
-    max-width: 900px;
+    max-width: 1120px;
     margin: 0 auto;
-    padding: 42px 24px 32px;
+    padding: 34px 24px;
 }
 
-.small-title {
+.top-dashboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+    gap: 28px;
+    align-items: stretch;
+}
+
+.brand-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.small-title,
+.eyebrow {
     margin: 0 0 6px;
     font-size: 12px;
     letter-spacing: 2px;
@@ -39,19 +52,18 @@ h1 {
 }
 
 main {
-    max-width: 900px;
+    max-width: 1120px;
     margin: 0 auto;
-    padding: 30px 20px 80px;
+    padding: 28px 24px 80px;
 }
 
 .summary-card {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    background: white;
-    border-radius: 18px;
-    padding: 28px;
-    margin-bottom: 40px;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.04);
+    background: #f7f7f9;
+    border-radius: 16px;
+    padding: 18px 12px;
+    margin: 28px 0 0;
 }
 
 .summary-card div {
@@ -60,13 +72,161 @@ main {
 
 .summary-number {
     display: block;
-    font-size: 32px;
+    font-size: 26px;
     font-weight: 600;
 }
 
 .summary-label {
-    font-size: 14px;
+    font-size: 12px;
     color: #86868b;
+}
+
+.calendar-card {
+    background: #f7f7f9;
+    border: 1px solid #ececef;
+    border-radius: 20px;
+    padding: 20px;
+}
+
+.calendar-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.calendar-date {
+    font-size: 28px;
+    font-weight: 650;
+}
+
+.calendar-day,
+.calendar-week,
+.week-task-heading span {
+    color: #86868b;
+    font-size: 13px;
+}
+
+.calendar-week {
+    text-align: right;
+    line-height: 1.6;
+}
+
+.week-strip {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin: 18px 0;
+}
+
+.week-day {
+    text-align: center;
+    padding: 8px 3px;
+    border-radius: 10px;
+    background: white;
+}
+
+.week-day .dow {
+    display: block;
+    font-size: 10px;
+    color: #86868b;
+    margin-bottom: 4px;
+}
+
+.week-day .dom {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.week-day.today {
+    background: #1d1d1f;
+    color: white;
+}
+
+.week-day.today .dow {
+    color: rgba(255,255,255,0.7);
+}
+
+.week-task-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.week-task-list {
+    display: grid;
+    gap: 7px;
+}
+
+.week-task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.week-task-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #1d1d1f;
+    margin-top: 5px;
+    flex: 0 0 auto;
+}
+
+.week-task-item.done {
+    color: #86868b;
+    text-decoration: line-through;
+}
+
+.compact-section {
+    margin-bottom: 18px;
+}
+
+.compact-section details {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #ececef;
+    overflow: hidden;
+}
+
+.compact-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 18px 20px;
+    cursor: pointer;
+}
+
+.compact-summary strong {
+    display: block;
+    font-size: 17px;
+}
+
+.compact-summary small {
+    display: block;
+    margin-top: 4px;
+    color: #86868b;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.summary-count {
+    color: #86868b;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.compact-body {
+    padding: 0 16px 16px;
+}
+
+.review-main {
+    margin: 34px 0 24px;
 }
 
 .section-title {
@@ -75,13 +235,20 @@ main {
 }
 
 .section-title h2 {
-    margin-bottom: 5px;
+    margin: 0 0 5px;
 }
 
 .section-title p {
-    margin-top: 0;
+    margin: 0;
     font-size: 14px;
     color: #86868b;
+}
+
+.review-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
 }
 
 .task-card {
@@ -89,13 +256,15 @@ main {
     justify-content: space-between;
     align-items: center;
     gap: 20px;
-
     background: white;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 12px;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    border: 1px solid #eeeeef;
+}
 
-    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.035);
+.task-card.overdue {
+    border-left: 4px solid #1d1d1f;
 }
 
 .task-info {
@@ -104,12 +273,12 @@ main {
 
 .task-module {
     margin-bottom: 6px;
-    font-size: 13px;
+    font-size: 12px;
     color: #86868b;
 }
 
 .task-name {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 500;
 }
 
@@ -119,14 +288,22 @@ main {
     color: #86868b;
 }
 
+.status-chip {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #f0f0f2;
+    font-size: 11px;
+    color: #666;
+}
+
 button {
     border: 0;
     border-radius: 10px;
     padding: 10px 16px;
-
     background: #1d1d1f;
     color: white;
-
     font-size: 14px;
     cursor: pointer;
 }
@@ -134,6 +311,11 @@ button {
 button.completed {
     background: #e8f5e9;
     color: #2e7d32;
+}
+
+button:disabled {
+    opacity: 0.65;
+    cursor: default;
 }
 
 .review-card {
@@ -153,18 +335,48 @@ button.completed {
     color: #667085;
 }
 
+.option-btn {
+    width: 100%;
+    text-align: left;
+}
+
 .empty-message {
     background: white;
     border-radius: 14px;
-    padding: 25px;
-
+    padding: 20px;
     text-align: center;
     color: #86868b;
+    border: 1px solid #eeeeef;
+}
+
+@media (max-width: 800px) {
+    .top-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .calendar-card {
+        order: -1;
+    }
 }
 
 @media (max-width: 600px) {
+    .header-content,
+    main {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
     h1 {
         font-size: 30px;
+    }
+
+    .review-title-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .review-title-row button {
+        width: 100%;
     }
 
     .task-card {
@@ -172,7 +384,15 @@ button.completed {
         align-items: flex-start;
     }
 
-    button {
+    .task-card button {
         width: 100%;
+    }
+
+    .week-strip {
+        gap: 4px;
+    }
+
+    .week-day {
+        padding: 7px 1px;
     }
 }
