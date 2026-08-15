@@ -11,6 +11,12 @@
     }
 
     window.renderQuestionImage = function (question) {
+        // 第一章正式题已经改为“文字题干 + 文字选项”为主。
+        // textOnly 题目完全跳过旧 sprite，避免任何空白图片框影响作答。
+        if (question && question.textOnly) {
+            return "";
+        }
+
         const layout = window.DA_HQ_LAYOUT && window.DA_HQ_LAYOUT[question && question.id];
 
         if (layout) {
@@ -25,8 +31,6 @@
                 `;
             }
 
-            // 第一章已经换成 60% 高清源。不要使用 pixelated，避免中文字边缘变成粗黑块。
-            // 同时限制放大幅度，避免把 480px 的裁切图硬拉到 1000px 以上。
             const displayWidth = String(spriteIndex) === "1"
                 ? Math.min(640, Math.round(w * 1.34))
                 : Math.round(w);
@@ -65,7 +69,7 @@
         originalRenderQuestion();
 
         const question = window.currentReviewQuestions && window.currentReviewQuestions[window.currentQuestionIndex];
-        if (!question) return;
+        if (!question || question.textOnly) return;
 
         const layout = window.DA_HQ_LAYOUT && window.DA_HQ_LAYOUT[question.id];
         if (!layout) return;
