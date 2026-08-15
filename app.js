@@ -10,12 +10,63 @@ function shuffleArray(array) {
     return newArray;
 }
 
-function getTodayString() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+function parseLocalDate(dateString) {
+    if (!dateString) return null;
+    const [year, month, day] = dateString.split("-").map(Number);
+    return new Date(year, month - 1, day);
+}
+
+function startOfDay(date = new Date()) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function addDays(date, days) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+}
+
+function getMonday(date) {
+    const d = startOfDay(date);
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    return addDays(d, diff);
+}
+
+function formatMonthDay(date) {
+    return `${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
+function formatDateRange(startDate, endDate) {
+    if (!startDate || !endDate) return "";
+    return `${startDate.replaceAll("-", ".")} — ${endDate.replaceAll("-", ".")}`;
+}
+
+function taskIsCurrent(task, today = startOfDay()) {
+    const start = parseLocalDate(task.startDate);
+    const end = parseLocalDate(task.endDate);
+    if (!start || !end) return false;
+    return start <= today && today <= end;
+}
+
+function taskIsOverdue(task, today = startOfDay()) {
+    const end = parseLocalDate(task.endDate);
+    return Boolean(end && end < today && !progress[task.id]);
+}
+
+function taskOverlapsWeek(task, weekStart, weekEnd) {
+    const start = parseLocalDate(task.startDate);
+    const end = parseLocalDate(task.endDate);
+    if (!start || !end) return false;
+    return start <= weekEnd && end >= weekStart;
+}
+
+function getVisibleStudyTasks() {
+    const today = startOfDay();
+    return studyPlan.filter(task =>
+        taskIsCurrent(task, today) ||
+        taskIsOverdue(task, today)
+    );
 }
 
 function loadProgress() {
@@ -94,36 +145,93 @@ function toggleTask(taskId) {
     render();
 }
 
-// ==================================================
-// 当前学习计划：只显示
-// 1. 当前日期所在计划周期的任务
-// 2. 已逾期但尚未完成的任务
-// 未来任务不显示
-// ==================================================
+function renderCalendar() {
+    const dateElement = document.getElementById("calendar-date");
+    const dayElement = document.getElementById("calendar-day");
+    const weekElement = document.getElementById("calendar-week");
+    const stripElement = document.getElementById("week-strip");
+    const taskCountElement = document.getElementById("week-task-count");
+    const taskListElement = document.getElementById("week-task-list");
+
+    if (!dateElement || !dayElement || !weekElement || !stripElement || !taskListElement) {
+        return;
+    }
+
+    const today = startOfDay();
+    const weekStart = getMonday(today);
+    const weekEnd = addDays(weekStart, 6);
+    const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+    const shortWeekdays = ["日", "一", "二", "三", "四", "五", "六"];
+
+    dateElement.textContent = `${today.getMonth() + 1}月${today.getDate()}日`;
+    dayElement.textContent = `${today.getFullYear()}年 · ${weekdays[today.getDay()]}`;
+    weekElement.textContent = `本周 ${formatMonthDay(weekStart)} — ${formatMonthDay(weekEnd)}`;
+
+    stripElement.innerHTML = "";
+
+    for (let i = 0; i < 7; i++) {
+        const date = addDays(weekStart, i);
+        const item = document.createElement("div");
+        item.className = "week-day";
+
+        if (date.getTime() === today.getTime()) {
+            item.classList.add("today");
+        }
+
+        item.innerHTML = `
+            <span class="dow">${shortWeekdays[date.getDay()]}</span>
+            <span class="dom">${date.getDate()}</span>
+        `;
+
+        stripElement.appendChild(item);
+    }
+
+    const weekTasks = studyPlan.filter(task =>
+        taskOverlapsWeek(task, weekStart, weekEnd)
+    );
+
+    const finishedCount = weekTasks.filter(task => progress[task.id]).length;
+
+    if (taskCountElement) {
+        taskCountElement.textContent = `${finishedCount}/${weekTasks.length} 完成`;
+    }
+
+    taskListElement.innerHTML = "";
+
+    if (weekTasks.length === 0) {
+        taskListElement.innerHTML = `<div class="week-task-item">本周暂无计划</div>`;
+        return;
+    }
+
+    weekTasks.forEach(task => {
+        const item = document.createElement("div");
+        item.className = `week-task-item${progress[task.id] ? " done" : ""}`;
+
+        item.innerHTML = `
+            <span class="week-task-dot"></span>
+            <span>${progress[task.id] ? "✓ " : ""}${task.category} · ${task.name}</span>
+        `;
+
+        taskListElement.appendChild(item);
+    });
+}
+
 function renderTasks() {
     const container = document.getElementById("task-list");
+    const countElement = document.getElementById("visible-task-count");
     if (!container) return;
 
     container.innerHTML = "";
+    const visibleTasks = getVisibleStudyTasks();
 
-    const today = getTodayString();
-
-    const currentTasks = studyPlan.filter(task => {
-        if (!task.startDate || !task.endDate) return false;
-        return task.startDate <= today && today <= task.endDate;
-    });
-
-    const overdueTasks = studyPlan.filter(task => {
-        if (!task.endDate) return false;
-        return task.endDate < today && !progress[task.id];
-    });
-
-    const visibleTasks = [...currentTasks, ...overdueTasks];
+    if (countElement) {
+        countElement.textContent = `${visibleTasks.length} 项`;
+    }
 
     if (visibleTasks.length === 0) {
         container.innerHTML = `
             <div class="empty-message">
-                当前没有需要显示的学习任务
+                当前没有需要打卡的任务
             </div>
         `;
         return;
@@ -131,16 +239,17 @@ function renderTasks() {
 
     visibleTasks.forEach(task => {
         const completed = Boolean(progress[task.id]);
-        const isOverdue = task.endDate < today && !completed;
-        const statusText = isOverdue ? "逾期未完成" : "当前计划";
+        const overdue = taskIsOverdue(task);
+        const statusText = overdue ? "逾期未完成" : "当前计划";
 
         const card = document.createElement("div");
-        card.className = "task-card";
+        card.className = `task-card${overdue ? " overdue" : ""}`;
 
         card.innerHTML = `
             <div class="task-info">
                 <div class="task-module">
                     ${task.category} · ${task.module}
+                    <span class="status-chip">${statusText}</span>
                 </div>
 
                 <div class="task-name">
@@ -148,7 +257,7 @@ function renderTasks() {
                 </div>
 
                 <div class="task-week">
-                    ${task.week} · ${statusText} · ${task.startDate} — ${task.endDate}
+                    ${task.week} · ${formatDateRange(task.startDate, task.endDate)}
                 </div>
             </div>
 
@@ -166,11 +275,18 @@ function renderTasks() {
 
 function renderReviewPool() {
     const container = document.getElementById("review-list");
+    const countElement = document.getElementById("unlocked-task-count");
     if (!container) return;
 
     container.innerHTML = "";
 
-    const unlockedTasks = studyPlan.filter(task => Boolean(progress[task.id]));
+    const unlockedTasks = studyPlan.filter(task =>
+        Boolean(progress[task.id])
+    );
+
+    if (countElement) {
+        countElement.textContent = `${unlockedTasks.length} 项`;
+    }
 
     if (unlockedTasks.length === 0) {
         container.innerHTML = `
@@ -188,6 +304,7 @@ function renderReviewPool() {
 
         const card = document.createElement("div");
         card.className = "review-card";
+
         card.innerHTML = `
             <strong>${task.name}</strong>
             <span>
@@ -229,7 +346,10 @@ function createWrongQuestionCard(question, record, task) {
             </strong>
 
             <div style="margin-top:12px; color:#667085; font-size:14px; line-height:1.8;">
-                做题 ${attempts} 次 ｜ 正确 ${correct} ｜ 错误 ${wrong} ｜ 正确率 ${accuracy}%
+                做题 ${attempts} 次
+                ｜ 正确 ${correct}
+                ｜ 错误 ${wrong}
+                ｜ 正确率 ${accuracy}%
                 <br>
                 最近一次：${lastResult}
             </div>
@@ -242,8 +362,8 @@ function createWrongQuestionCard(question, record, task) {
 function renderWrongList() {
     const container = document.getElementById("wrong-list");
     const countElement = document.getElementById("wrong-total-count");
-
     if (!container) return;
+
     container.innerHTML = "";
 
     const wrongQuestions = questions.filter(question => {
@@ -282,6 +402,7 @@ function renderWrongList() {
     });
 
     const categoryOrder = [];
+
     studyPlan.forEach(task => {
         if (!categoryOrder.includes(task.category)) {
             categoryOrder.push(task.category);
@@ -304,13 +425,12 @@ function renderWrongList() {
         const categoryDetails = document.createElement("details");
         categoryDetails.style.marginBottom = "14px";
         categoryDetails.style.background = "white";
-        categoryDetails.style.borderRadius = "16px";
-        categoryDetails.style.padding = "18px 20px";
+        categoryDetails.style.borderRadius = "14px";
+        categoryDetails.style.padding = "16px 18px";
 
         const categorySummary = document.createElement("summary");
         categorySummary.style.cursor = "pointer";
         categorySummary.style.fontWeight = "600";
-        categorySummary.style.fontSize = "18px";
         categorySummary.innerHTML = `
             ${category}
             <span style="margin-left:8px; color:#86868b; font-size:13px; font-weight:400;">
@@ -321,6 +441,7 @@ function renderWrongList() {
         categoryDetails.appendChild(categorySummary);
 
         const moduleOrder = [];
+
         studyPlan
             .filter(task => task.category === category)
             .forEach(task => {
@@ -340,10 +461,10 @@ function renderWrongList() {
             if (!items || items.length === 0) return;
 
             const moduleDetails = document.createElement("details");
-            moduleDetails.style.marginTop = "14px";
+            moduleDetails.style.marginTop = "12px";
             moduleDetails.style.background = "#f7f8fa";
             moduleDetails.style.borderRadius = "12px";
-            moduleDetails.style.padding = "14px 16px";
+            moduleDetails.style.padding = "12px 14px";
 
             const moduleSummary = document.createElement("summary");
             moduleSummary.style.cursor = "pointer";
@@ -381,7 +502,10 @@ function renderSummary() {
 
     const reviewable = studyPlan.filter(task => {
         if (!progress[task.id]) return false;
-        return questions.some(question => question.taskId === task.id);
+
+        return questions.some(
+            question => question.taskId === task.id
+        );
     }).length;
 
     const completedElement = document.getElementById("completed-count");
@@ -407,7 +531,9 @@ function buildReviewQuestions() {
             question => question.taskId === task.id
         );
 
-        reviewQuestions.push(...shuffleArray(taskQuestions));
+        reviewQuestions.push(
+            ...shuffleArray(taskQuestions)
+        );
     });
 
     return reviewQuestions;
@@ -439,9 +565,14 @@ function renderQuestion() {
     const question = currentReviewQuestions[currentQuestionIndex];
     if (!question) return;
 
-    const task = studyPlan.find(item => item.id === question.taskId);
+    const task = studyPlan.find(
+        item => item.id === question.taskId
+    );
 
-    const shuffledOptions = shuffleArray(Object.entries(question.options));
+    const shuffledOptions = shuffleArray(
+        Object.entries(question.options)
+    );
+
     const displayLabels = ["A", "B", "C", "D"];
 
     currentOptionOrder = shuffledOptions.map(
@@ -452,18 +583,20 @@ function renderQuestion() {
         })
     );
 
-    const optionsHTML = currentOptionOrder.map(option => `
-        <button
-            class="option-btn"
-            onclick="checkAnswer('${option.originalKey}', '${option.displayKey}')"
-        >
-            ${option.displayKey}. ${option.value}
-        </button>
-    `).join("");
+    const optionsHTML = currentOptionOrder
+        .map(option => `
+            <button
+                class="option-btn"
+                onclick="checkAnswer('${option.originalKey}', '${option.displayKey}')"
+            >
+                ${option.displayKey}. ${option.value}
+            </button>
+        `)
+        .join("");
 
     quizArea.innerHTML = `
         <div class="task-card">
-            <div style="width:100%;">
+            <div style="width: 100%;">
                 <div class="task-module">
                     ${task ? `${task.category} · ${task.module}` : ""}
                 </div>
@@ -473,7 +606,8 @@ function renderQuestion() {
                 </div>
 
                 <p>
-                    第 ${currentQuestionIndex + 1} / ${currentReviewQuestions.length} 题
+                    第 ${currentQuestionIndex + 1}
+                    / ${currentReviewQuestions.length} 题
                 </p>
 
                 <h3>${question.question}</h3>
@@ -496,6 +630,7 @@ function checkAnswer(selectedOriginalKey, selectedDisplayKey) {
     if (!feedback) return;
 
     const isCorrect = selectedOriginalKey === question.answer;
+
     recordAnswer(question.id, isCorrect);
     renderWrongList();
 
@@ -516,7 +651,8 @@ function checkAnswer(selectedOriginalKey, selectedDisplayKey) {
             <div class="review-card">
                 <strong>✓ 回答正确</strong>
                 <p>
-                    正确答案：${correctOption ? correctOption.displayKey : ""}.
+                    正确答案：
+                    ${correctOption ? correctOption.displayKey : ""}.
                     ${correctOption ? correctOption.value : ""}
                 </p>
                 <p>${question.explanation}</p>
@@ -528,11 +664,13 @@ function checkAnswer(selectedOriginalKey, selectedDisplayKey) {
             <div class="review-card">
                 <strong>✕ 回答错误</strong>
                 <p>
-                    你的答案：${selectedOption ? selectedDisplayKey : ""}.
+                    你的答案：
+                    ${selectedOption ? selectedDisplayKey : ""}.
                     ${selectedOption ? selectedOption.value : ""}
                 </p>
                 <p>
-                    正确答案：${correctOption ? correctOption.displayKey : ""}.
+                    正确答案：
+                    ${correctOption ? correctOption.displayKey : ""}.
                     ${correctOption ? correctOption.value : ""}
                 </p>
                 <p>${question.explanation}</p>
@@ -556,6 +694,7 @@ function nextQuestion() {
                 <button onclick="startReview()">再复习一次</button>
             </div>
         `;
+
         return;
     }
 
@@ -563,6 +702,7 @@ function nextQuestion() {
 }
 
 function render() {
+    renderCalendar();
     renderTasks();
     renderReviewPool();
     renderSummary();
