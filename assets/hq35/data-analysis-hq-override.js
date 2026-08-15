@@ -2,29 +2,15 @@
     const originalRenderQuestionImage = window.renderQuestionImage;
     const originalRenderQuestion = window.renderQuestion;
 
-    const directImages = {
-        "da-ch1-009": "assets/da-original/image17.webp?v=20260816-1",
-        "da-ch1-010": "assets/da-original/image17.webp?v=20260816-1"
-    };
-
     function escapeAttr(value) {
-        return String(value || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
     }
 
     window.renderQuestionImage = function (question) {
-        const direct = question && directImages[question.id];
-        if (direct) {
-            return `
-                <div class="question-image-wrap question-image-wrap-hq question-image-wrap-direct">
-                    <img
-                        class="question-original-image question-original-image-hq"
-                        src="${direct}"
-                        alt="${escapeAttr(question.sourceId || question.question || "原题") }"
-                    >
-                </div>
-            `;
-        }
-
         const layout = window.DA_HQ_LAYOUT && window.DA_HQ_LAYOUT[question && question.id];
 
         if (layout) {
@@ -39,8 +25,10 @@
                 `;
             }
 
+            // 第一章已经换成 60% 高清源。不要使用 pixelated，避免中文字边缘变成粗黑块。
+            // 同时限制放大幅度，避免把 480px 的裁切图硬拉到 1000px 以上。
             const displayWidth = String(spriteIndex) === "1"
-                ? Math.round(w * 1.5)
+                ? Math.min(640, Math.round(w * 1.34))
                 : Math.round(w);
 
             return `
@@ -59,7 +47,7 @@
                             y="0"
                             width="${sheetW}"
                             height="${sheetH}"
-                            style="image-rendering:pixelated;"
+                            style="image-rendering:auto;"
                         ></image>
                     </svg>
                 </div>
@@ -77,7 +65,7 @@
         originalRenderQuestion();
 
         const question = window.currentReviewQuestions && window.currentReviewQuestions[window.currentQuestionIndex];
-        if (!question || directImages[question.id]) return;
+        if (!question) return;
 
         const layout = window.DA_HQ_LAYOUT && window.DA_HQ_LAYOUT[question.id];
         if (!layout) return;
@@ -95,7 +83,10 @@
             }
         }).catch(function (error) {
             console.error("高清资料分析题图加载失败：", error);
-            const loading = document.querySelector(`.question-image-loading[data-hq-question="${CSS.escape(renderedQuestionId)}"]`);
+            const escapedId = window.CSS && CSS.escape
+                ? CSS.escape(renderedQuestionId)
+                : renderedQuestionId.replace(/"/g, "\\\"");
+            const loading = document.querySelector(`.question-image-loading[data-hq-question="${escapedId}"]`);
             if (loading) {
                 loading.textContent = "高清原题加载失败，请刷新页面重试。";
             }
