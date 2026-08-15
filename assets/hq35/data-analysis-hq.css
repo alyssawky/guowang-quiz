@@ -15,13 +15,33 @@
 }
 
 .question-original-svg-hq {
-    width: min(100%, 1000px);
+    width: min(100%, 1186px);
     height: auto;
     image-rendering: auto;
+}
+
+.question-image-wrap-direct {
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+}
+
+.question-original-image-hq {
+    display: block;
+    width: auto;
+    max-width: min(100%, 1186px);
+    height: auto;
+    margin: 0 auto;
+    object-fit: contain;
 }
 
 @media (max-width: 600px) {
     .question-image-wrap-hq {
         padding: 6px;
+    }
+
+    .question-original-image-hq {
+        width: 100%;
+        max-width: 100%;
     }
 }
