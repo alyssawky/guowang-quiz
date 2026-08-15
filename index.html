@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>国网2027备考</title>
-    <link rel="stylesheet" href="style.css?v=20260815-5">
-    <link rel="stylesheet" href="calculator-layout.css?v=20260815-5">
-    <link rel="stylesheet" href="calculator-compact.css?v=20260815-6">
-    <link rel="stylesheet" href="quiz-enhancements.css?v=20260815-7">
+    <link rel="stylesheet" href="style.css?v=20260815-8">
+    <link rel="stylesheet" href="calculator-layout.css?v=20260815-8">
+    <link rel="stylesheet" href="calculator-compact.css?v=20260815-8">
+    <link rel="stylesheet" href="quiz-enhancements.css?v=20260815-8">
 </head>
 <body>
 
@@ -53,7 +53,7 @@
 
     <section class="review-main">
         <div class="section-title review-title-row">
-            <div><p class="eyebrow">REVIEW</p><h2>开始复习</h2><p>只会出现你已经完成学习的内容对应的题目</p></div>
+            <div><p class="eyebrow">REVIEW</p><h2>开始复习</h2><p>已学习内容 + 按计划日期解锁的国网题库</p></div>
             <button id="start-review-btn">开始复习</button>
         </div>
         <div id="quiz-area"></div>
@@ -62,7 +62,7 @@
     <section class="compact-section">
         <details id="review-pool-book">
             <summary class="compact-summary">
-                <span><strong>已解锁复习范围</strong><small>查看目前已经学过、可以出题的内容</small></span>
+                <span><strong>已解锁复习范围</strong><small>查看目前已经学过或已经到计划日期、可以出题的内容</small></span>
                 <span class="summary-count" id="unlocked-task-count">0 项</span>
             </summary>
             <div class="compact-body"><div id="review-list"></div></div>
@@ -164,12 +164,22 @@
     </div>
 </section>
 
-<script src="plan.js?v=20260815-5"></script>
-<script src="questions.js?v=20260815-5"></script>
-<script src="questions-computer-001.js?v=20260815-7"></script>
-<script src="app.js?v=20260815-5"></script>
-<script src="quiz-enhancements.js?v=20260815-7"></script>
-<script src="calculator.js?v=20260815-5"></script>
+<script src="plan.js?v=20260815-8"></script>
+<script src="plan-preoct300.js?v=20260815-8"></script>
+
+<script src="questions.js?v=20260815-8"></script>
+<script src="questions-computer-001.js?v=20260815-8"></script>
+<script src="questions-preoct300-w1.js?v=20260815-8"></script>
+<script src="questions-preoct300-w2.js?v=20260815-8"></script>
+<script src="questions-preoct300-w3.js?v=20260815-8"></script>
+<script src="questions-preoct300-w4.js?v=20260815-8"></script>
+<script src="questions-preoct300-w5.js?v=20260815-8"></script>
+<script src="questions-preoct300-w6.js?v=20260815-8"></script>
+
+<script src="app.js?v=20260815-8"></script>
+<script src="quiz-enhancements.js?v=20260815-8"></script>
+<script src="scheduled-questionbank.js?v=20260815-8"></script>
+<script src="calculator.js?v=20260815-8"></script>
 
 </body>
 </html>
