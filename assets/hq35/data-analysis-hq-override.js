@@ -39,6 +39,10 @@
                 `;
             }
 
+            const displayWidth = String(spriteIndex) === "1"
+                ? Math.round(w * 1.5)
+                : Math.round(w);
+
             return `
                 <div class="question-image-wrap question-image-wrap-hq">
                     <svg
@@ -47,6 +51,7 @@
                         role="img"
                         aria-label="${escapeAttr(question.sourceId || question.question || "原题") }"
                         preserveAspectRatio="xMidYMid meet"
+                        style="width:min(100%, ${displayWidth}px);height:auto;"
                     >
                         <image
                             href="${sprite}"
@@ -54,6 +59,7 @@
                             y="0"
                             width="${sheetW}"
                             height="${sheetH}"
+                            style="image-rendering:pixelated;"
                         ></image>
                     </svg>
                 </div>
