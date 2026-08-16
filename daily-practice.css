@@ -1,0 +1,104 @@
+.daily-practice-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 22px;
+    margin: 18px 0 14px;
+    padding: 20px 24px;
+    border: 1px solid rgba(0, 120, 102, .22);
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(0, 120, 102, .09), rgba(255,255,255,.98) 60%);
+    box-shadow: 0 12px 28px rgba(18, 74, 67, .07);
+}
+
+.daily-practice-copy {
+    flex: 1;
+    min-width: 0;
+}
+
+.daily-practice-kicker {
+    margin-bottom: 4px;
+    color: #007866;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+
+.daily-practice-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.daily-practice-title-row h2 {
+    margin: 0;
+    color: #073f3a;
+    font-size: 22px;
+    line-height: 1.25;
+}
+
+.daily-practice-count {
+    color: #007866;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.daily-practice-copy p {
+    margin: 7px 0 10px;
+    color: #6d7d7b;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.daily-practice-progress {
+    width: min(420px, 100%);
+    height: 7px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #dceae7;
+}
+
+.daily-practice-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #007866;
+    transition: width .2s ease;
+}
+
+.daily-practice-button {
+    flex: 0 0 auto;
+    min-width: 150px;
+    padding: 12px 18px;
+    border: 0;
+    border-radius: 13px;
+    background: #007866;
+    color: white;
+    font-size: 14px;
+    font-weight: 750;
+    cursor: pointer;
+    box-shadow: 0 7px 18px rgba(0, 120, 102, .18);
+}
+
+.daily-practice-button:hover:not(:disabled) {
+    background: #006457;
+}
+
+.daily-practice-button:disabled {
+    cursor: default;
+    background: #b9cfca;
+    box-shadow: none;
+}
+
+@media (max-width: 720px) {
+    .daily-practice-card {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 17px 18px;
+    }
+
+    .daily-practice-button {
+        width: 100%;
+    }
+}
