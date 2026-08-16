@@ -91,10 +91,23 @@
         console.info("国网必刷题完整性检查", counts, `total=${total}`);
 
         await loadScriptOnce("reset-test-answer-history.js?v=20260816-1", "data-answer-history-reset-loader");
+
+        // 基础记忆知识层：8/17企业文化重点题 + 全题库保守兜底。
         await loadScriptOnce("bank-memory-knowledge.js?v=20260816-1", "data-bank-memory-knowledge-loader");
+
+        // 形势政策50题全部使用专门的知识解析、易混辨析和记忆钩子。
+        await loadScriptOnce("bank-memory-policy-knowledge.js?v=20260816-1", "data-bank-memory-policy-loader");
+
+        // 三层结构：往日题累计记忆 + 明日题提前1天预习 + 今日正式刷题。
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
+
+        // 累计记忆按1/2/4/7/15/30天间隔，到期与逾期题优先加权抽取。
         await loadScriptOnce("memory-curve.js?v=20260816-1", "data-memory-curve-loader");
+
+        // 稳定展示“知识点解析 / 易混辨析 / 记忆钩子”，避免观察器循环重绘。
         await loadScriptOnce("memory-knowledge-ui.js?v=20260816-2", "data-memory-knowledge-ui-loader");
+
+        // 正确率只统计完整刷完的章节；章节复习支持断点续刷。
         await loadScriptOnce("study-session-rules.js?v=20260816-1", "data-study-session-rules-loader");
 
         refreshQuestionViews();
