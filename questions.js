@@ -8,7 +8,8 @@ const questions = [];
   "questions-reasoning-attribution-1.js?v=20260816-1",
   "questions-reasoning-attribution-2.js?v=20260816-1",
   "questions-reasoning-attribution-3.js?v=20260816-1",
-  "questions-reasoning-attribution-4.js?v=20260816-1"
+  "questions-reasoning-attribution-4.js?v=20260816-1",
+  "daily-practice.js?v=20260816-2"
 ].forEach(src => document.write(`<script src="${src}"><\/script>`));
 
 // 页面完成解析后再做一次国网必刷300题完整性检查。
