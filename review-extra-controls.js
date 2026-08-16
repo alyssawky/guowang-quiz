@@ -12,6 +12,15 @@
         return questions.filter(question => question.taskId === taskId);
     }
 
+    function getAllQuestionBankQuestions() {
+        const taskIds = new Set(
+            studyPlan
+                .filter(task => task.questionBank || task.category === "国网题库")
+                .map(task => task.id)
+        );
+        return questions.filter(question => taskIds.has(question.taskId));
+    }
+
     function questionOptionListHTML(question) {
         if (question.type === "short") {
             return `<div class="inventory-answer">参考答案：${question.answerDisplay || question.answer || ""}</div>`;
@@ -114,54 +123,55 @@
         });
     }
 
+    function wrapWithInventoryButton(startButton, questionList, title) {
+        if (!startButton || startButton.closest(".review-choice-actions")) return;
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "review-choice-actions";
+        startButton.replaceWith(wrapper);
+        wrapper.appendChild(startButton);
+
+        const viewButton = document.createElement("button");
+        viewButton.type = "button";
+        viewButton.className = "view-all-questions-button";
+        viewButton.textContent = `查看全部题目（${questionList.length}）`;
+        viewButton.addEventListener("click", () => {
+            showQuestionInventory(questionList, title);
+        });
+        wrapper.appendChild(viewButton);
+    }
+
     function enhanceSectionChooser() {
         const chooser = document.getElementById("review-section-chooser");
         if (!chooser) return;
 
         chooser.querySelectorAll("button[data-review-major-module]").forEach(startButton => {
-            if (startButton.closest(".review-choice-actions")) return;
-
             const module = startButton.dataset.reviewMajorModule;
-            const wrapper = document.createElement("div");
-            wrapper.className = "review-choice-actions";
-            startButton.replaceWith(wrapper);
-            wrapper.appendChild(startButton);
-
-            const viewButton = document.createElement("button");
-            viewButton.type = "button";
-            viewButton.className = "view-all-questions-button";
-            viewButton.textContent = `查看全部题目（${getAllQuestionsForMajorModule("行测", module).length}）`;
-            viewButton.addEventListener("click", () => {
-                showQuestionInventory(
-                    getAllQuestionsForMajorModule("行测", module),
-                    `题库核对 · ${module}`
-                );
-            });
-            wrapper.appendChild(viewButton);
+            wrapWithInventoryButton(
+                startButton,
+                getAllQuestionsForMajorModule("行测", module),
+                `题库核对 · ${module}`
+            );
         });
 
         chooser.querySelectorAll("button[data-review-task-id]").forEach(startButton => {
-            if (startButton.closest(".review-choice-actions")) return;
-
             const taskId = startButton.dataset.reviewTaskId;
             const task = studyPlan.find(item => item.id === taskId);
-            const wrapper = document.createElement("div");
-            wrapper.className = "review-choice-actions";
-            startButton.replaceWith(wrapper);
-            wrapper.appendChild(startButton);
-
-            const viewButton = document.createElement("button");
-            viewButton.type = "button";
-            viewButton.className = "view-all-questions-button";
-            viewButton.textContent = `查看全部题目（${getAllQuestionsForTaskId(taskId).length}）`;
-            viewButton.addEventListener("click", () => {
-                showQuestionInventory(
-                    getAllQuestionsForTaskId(taskId),
-                    `题库核对 · ${task ? task.name : taskId}`
-                );
-            });
-            wrapper.appendChild(viewButton);
+            wrapWithInventoryButton(
+                startButton,
+                getAllQuestionsForTaskId(taskId),
+                `题库核对 · ${task ? task.name : taskId}`
+            );
         });
+
+        const bankAllButton = chooser.querySelector("button[data-review-question-bank-all]");
+        if (bankAllButton) {
+            wrapWithInventoryButton(
+                bankAllButton,
+                getAllQuestionBankQuestions(),
+                "题库核对 · 国网必刷题"
+            );
+        }
     }
 
     const baseRenderSectionChooser = window.renderSectionChooser;
