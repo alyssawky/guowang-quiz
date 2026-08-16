@@ -374,17 +374,19 @@
         if (!button) return;
 
         const summary = getPoolSummary();
-        if (!summary.total) {
-            button.textContent = "暂无累计旧题";
-            button.disabled = true;
-            return;
-        }
+        const desiredText = !summary.total
+            ? "暂无累计旧题"
+            : summary.due
+                ? `记忆曲线复习 · 到期${summary.due}题`
+                : `记忆曲线复习 · 巩固旧题`;
+        const desiredDisabled = !summary.total;
+        const desiredTitle = summary.total
+            ? `累计已学习 ${summary.total} 题；每轮最多 ${Math.min(SESSION_LIMIT, summary.total)} 张，到期题优先。`
+            : "";
 
-        button.disabled = false;
-        button.textContent = summary.due
-            ? `记忆曲线复习 · 到期${summary.due}题`
-            : `记忆曲线复习 · 巩固旧题`;
-        button.title = `累计已学习 ${summary.total} 题；每轮最多 ${Math.min(SESSION_LIMIT, summary.total)} 张，到期题优先。`;
+        if (button.textContent !== desiredText) button.textContent = desiredText;
+        if (button.disabled !== desiredDisabled) button.disabled = desiredDisabled;
+        if (button.title !== desiredTitle) button.title = desiredTitle;
     }
 
     document.addEventListener("click", event => {
