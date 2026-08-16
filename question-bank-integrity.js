@@ -100,6 +100,9 @@
         // 大框架：行测→四板块；计算机→模块；国网必刷题→企业文化/战略/新型电力系统/品牌/形势政策→具体知识点。
         await loadScriptOnce("weak-knowledge-hierarchy.js?v=20260817-1", "data-weak-knowledge-hierarchy-loader");
 
+        // 所有层级默认闭合：进入错题知识点复习区后，由用户逐级点击展开。
+        await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
+
         refreshQuestionViews();
     }
 
