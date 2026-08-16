@@ -1,4 +1,28 @@
-/* 资料分析：同一道题出现多张图表时，桌面端并排显示，窄屏自动上下排列。 */
+/* 资料分析图表布局：
+   - 单图：桌面端缩小居中，方便同时看到题干和图表；
+   - 双图及以上：桌面端并排显示；
+   - 窄屏：全部自动恢复单列满宽。
+*/
+
+/* 单张图表：比双图中的单张稍大，但不再占满整行。 */
+.da-native-visual {
+    width: min(64%, 780px);
+    margin: 16px auto 4px;
+}
+
+/* 单张宽表格稍微放宽，避免列内容过度拥挤。 */
+.da-native-visual:has(.da-table-scroll) {
+    width: min(76%, 940px);
+}
+
+.da-native-visual > .da-chart-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 430px;
+    margin: 0 auto;
+}
+
 .da-multi-visual-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -8,7 +32,9 @@
     margin: 16px 0 4px;
 }
 
-.da-multi-visual-grid > .da-native-visual {
+/* 多图时覆盖单图宽度规则，各占所在网格一整格。 */
+.da-multi-visual-grid > .da-native-visual,
+.da-multi-visual-grid > .da-native-visual:has(.da-table-scroll) {
     min-width: 0;
     width: 100%;
     margin: 0 !important;
@@ -68,6 +94,16 @@
 
 /* 三张及以上图仍采用两列，最后一张自然落到下一行。 */
 @media (max-width: 820px) {
+    .da-native-visual,
+    .da-native-visual:has(.da-table-scroll) {
+        width: 100%;
+        max-width: none;
+    }
+
+    .da-native-visual > .da-chart-svg {
+        max-height: none;
+    }
+
     .da-multi-visual-grid {
         grid-template-columns: 1fr;
         gap: 12px;
