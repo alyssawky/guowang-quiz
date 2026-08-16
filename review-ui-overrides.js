@@ -1,8 +1,6 @@
-// 复习区结构：
-// 1) 一级：行测 / 计算机 / 国网必刷题；
-// 2) 行测二级：资料分析 / 判断推理 / 言语理解 / 数量关系；
-// 3) 行测三级：按学习章节（studyPlan task）单独复习，同时保留“复习本板块全部已解锁题”；
-// 4) 国网必刷题始终显示，按 Week 1～Week 6 复习，并提供“全部已解锁题”入口。
+// 复习区：紧凑目录式层级
+// 一级：行测 / 计算机 / 国网必刷题
+// 行测二级：四大板块；三级：每个已导入章节一行显示。
 
 const REVIEW_XINGCE_MODULES = ["资料分析", "判断推理", "言语理解", "数量关系"];
 const REVIEW_QUESTION_BANK_CATEGORY = "国网题库";
@@ -22,10 +20,7 @@ function getUnlockedQuestionsForMajorModule(category, module) {
             .filter(task => task.category === category && task.module === module)
             .map(task => task.id)
     );
-
-    return questions.filter(question =>
-        taskIds.has(question.taskId) && questionIsUnlocked(question)
-    );
+    return questions.filter(question => taskIds.has(question.taskId) && questionIsUnlocked(question));
 }
 
 function getAllQuestionsForMajorModuleLocal(category, module) {
@@ -45,14 +40,11 @@ function getXingceChapterRecords(module) {
             const unlockedQuestions = allQuestions.filter(questionIsUnlocked);
             return { task, allQuestions, unlockedQuestions };
         })
-        // 只有已经导入题目的章节才进入复习区，避免把未来空章节铺满页面。
         .filter(record => record.allQuestions.length > 0);
 }
 
 function getQuestionBankTasks() {
-    return studyPlan.filter(task =>
-        task.questionBank || task.category === REVIEW_QUESTION_BANK_CATEGORY
-    );
+    return studyPlan.filter(task => task.questionBank || task.category === REVIEW_QUESTION_BANK_CATEGORY);
 }
 
 function getQuestionBankRecords() {
@@ -80,9 +72,7 @@ function formatShortDate(dateString) {
 }
 
 function startMajorModuleReview(category, module) {
-    const moduleQuestions = shuffleArray(
-        getUnlockedQuestionsForMajorModule(category, module)
-    );
+    const moduleQuestions = shuffleArray(getUnlockedQuestionsForMajorModule(category, module));
     if (!moduleQuestions.length) return;
 
     startQuestionSession(
@@ -101,7 +91,7 @@ function startQuestionBankReview() {
 
     startQuestionSession(
         bankQuestions,
-        `国网必刷题 · 全部已解锁`,
+        "国网必刷题 · 全部已解锁",
         `${bankQuestions.length} 道已解锁题目`
     );
 
@@ -109,47 +99,73 @@ function startQuestionBankReview() {
     if (chooser) chooser.hidden = true;
 }
 
+function renderChapterRow(task, allQuestions, unlockedQuestions, index, extraMeta = "") {
+    const disabled = unlockedQuestions.length === 0;
+    const meta = [
+        `${unlockedQuestions.length}/${allQuestions.length} 道已解锁`,
+        extraMeta || task.week || ""
+    ].filter(Boolean).join(" · ");
+
+    return `
+        <div class="review-chapter-row ${disabled ? "is-locked" : ""}">
+            <div class="review-chapter-info">
+                <span class="review-chapter-index">${String(index + 1).padStart(2, "0")}</span>
+                <div class="review-chapter-copy">
+                    <strong>${task.name}</strong>
+                    <small>${meta}</small>
+                </div>
+            </div>
+            <div class="review-row-actions">
+                <button
+                    type="button"
+                    class="review-row-start"
+                    data-review-task-id="${task.id}"
+                    ${disabled ? "disabled" : ""}
+                >复习</button>
+                <button
+                    type="button"
+                    class="review-row-view"
+                    data-view-task-id="${task.id}"
+                >查看题目</button>
+            </div>
+        </div>
+    `;
+}
+
 function renderXingceModulePanel(module) {
     const chapters = getXingceChapterRecords(module);
     const unlockedTotal = getUnlockedQuestionsForMajorModule("行测", module).length;
     const importedTotal = getAllQuestionsForMajorModuleLocal("行测", module).length;
 
-    const chapterHTML = chapters.length
-        ? chapters.map(({ task, allQuestions, unlockedQuestions }, index) => `
-            <button
-                type="button"
-                class="review-section-button review-chapter-button"
-                data-review-task-id="${task.id}"
-                ${unlockedQuestions.length === 0 ? "disabled" : ""}
-            >
-                <strong>${index + 1}. ${task.name}</strong>
-                <span>${unlockedQuestions.length}/${allQuestions.length} 道已解锁</span>
-                <small>${task.week || ""}</small>
-            </button>
-        `).join("")
-        : `<div class="review-chapter-empty">这一板块暂时还没有导入题目</div>`;
+    const rows = chapters.length
+        ? chapters.map(({ task, allQuestions, unlockedQuestions }, index) =>
+            renderChapterRow(task, allQuestions, unlockedQuestions, index)
+        ).join("")
+        : `<div class="review-chapter-empty">暂时还没有导入题目</div>`;
 
     return `
-        <div class="review-major-panel">
+        <section class="review-major-panel">
             <div class="review-major-panel-head">
-                <div>
+                <div class="review-major-title-block">
                     <strong class="review-major-panel-title">${module}</strong>
                     <span class="review-major-panel-count">${unlockedTotal}/${importedTotal} 道已解锁</span>
                 </div>
-                <button
-                    type="button"
-                    class="review-all-module-button"
-                    data-review-major-module="${module}"
-                    ${unlockedTotal === 0 ? "disabled" : ""}
-                >
-                    复习全部已解锁
-                </button>
+                <div class="review-major-actions">
+                    <button
+                        type="button"
+                        class="review-all-module-button"
+                        data-review-major-module="${module}"
+                        ${unlockedTotal === 0 ? "disabled" : ""}
+                    >复习全部</button>
+                    <button
+                        type="button"
+                        class="review-view-module-button"
+                        data-view-major-module="${module}"
+                    >查看全部题目</button>
+                </div>
             </div>
-            <div class="review-chapter-label">按章节复习</div>
-            <div class="review-section-grid review-chapter-grid">
-                ${chapterHTML}
-            </div>
-        </div>
+            <div class="review-chapter-list">${rows}</div>
+        </section>
     `;
 }
 
@@ -163,35 +179,38 @@ function renderQuestionBankSection() {
     return `
         <div class="review-section-group review-question-bank-group">
             <div class="review-section-group-title">${REVIEW_QUESTION_BANK_LABEL}</div>
-            <div class="review-bank-summary">
-                <div>
-                    <strong>10月前必学300题</strong>
-                    <span>${unlockedCount}/${allCount} 道已解锁</span>
+            <section class="review-major-panel review-bank-panel">
+                <div class="review-major-panel-head">
+                    <div class="review-major-title-block">
+                        <strong class="review-major-panel-title">10月前必学300题</strong>
+                        <span class="review-major-panel-count">${unlockedCount}/${allCount} 道已解锁</span>
+                    </div>
+                    <div class="review-major-actions">
+                        <button
+                            type="button"
+                            class="review-all-module-button"
+                            data-review-question-bank-all
+                            ${unlockedCount === 0 ? "disabled" : ""}
+                        >复习全部</button>
+                        <button
+                            type="button"
+                            class="review-view-module-button"
+                            data-view-question-bank-all
+                        >查看全部题目</button>
+                    </div>
                 </div>
-                <button
-                    type="button"
-                    class="review-all-module-button"
-                    data-review-question-bank-all
-                    ${unlockedCount === 0 ? "disabled" : ""}
-                >
-                    复习全部已解锁
-                </button>
-            </div>
-            <div class="review-chapter-label">按周复习</div>
-            <div class="review-section-grid review-bank-grid">
-                ${records.map(({ task, allQuestions, unlockedQuestions }) => `
-                    <button
-                        type="button"
-                        class="review-section-button review-bank-week-button"
-                        data-review-task-id="${task.id}"
-                        ${unlockedQuestions.length === 0 ? "disabled" : ""}
-                    >
-                        <strong>${task.week || task.name}</strong>
-                        <span>${unlockedQuestions.length}/${allQuestions.length} 道已解锁</span>
-                        <small>${formatShortDate(task.startDate)}–${formatShortDate(task.endDate)} · ${task.name}</small>
-                    </button>
-                `).join("")}
-            </div>
+                <div class="review-chapter-list">
+                    ${records.map(({ task, allQuestions, unlockedQuestions }, index) =>
+                        renderChapterRow(
+                            task,
+                            allQuestions,
+                            unlockedQuestions,
+                            index,
+                            `${formatShortDate(task.startDate)}–${formatShortDate(task.endDate)}`
+                        )
+                    ).join("")}
+                </div>
+            </section>
         </div>
     `;
 }
@@ -209,7 +228,6 @@ function renderSectionChooser() {
         .filter(item => item.allQuestions.length > 0);
 
     const computerItems = availableTasks.filter(item => item.task.category === "计算机");
-
     const sections = [];
 
     sections.push(`
@@ -223,28 +241,20 @@ function renderSectionChooser() {
 
     if (computerItems.length > 0) {
         sections.push(`
-            <div class="review-section-group">
+            <div class="review-section-group review-computer-group">
                 <div class="review-section-group-title">计算机</div>
-                <div class="review-section-grid">
-                    ${computerItems.map(({ task, allQuestions, unlockedQuestions }) => `
-                        <button
-                            type="button"
-                            class="review-section-button"
-                            data-review-task-id="${task.id}"
-                            ${unlockedQuestions.length === 0 ? "disabled" : ""}
-                        >
-                            <strong>${task.name}</strong>
-                            <span>${unlockedQuestions.length}/${allQuestions.length} 道已解锁</span>
-                            <small>${task.module || ""}</small>
-                        </button>
-                    `).join("")}
-                </div>
+                <section class="review-major-panel">
+                    <div class="review-chapter-list">
+                        ${computerItems.map(({ task, allQuestions, unlockedQuestions }, index) =>
+                            renderChapterRow(task, allQuestions, unlockedQuestions, index, task.module || "")
+                        ).join("")}
+                    </div>
+                </section>
             </div>
         `);
     }
 
     sections.push(renderQuestionBankSection());
-
     chooser.innerHTML = sections.join("");
 
     chooser.querySelectorAll("[data-review-major-module]").forEach(button => {
@@ -256,15 +266,11 @@ function renderSectionChooser() {
 
     chooser.querySelectorAll("[data-review-task-id]").forEach(button => {
         if (button.disabled) return;
-        button.addEventListener("click", () => {
-            startTaskReview(button.dataset.reviewTaskId);
-        });
+        button.addEventListener("click", () => startTaskReview(button.dataset.reviewTaskId));
     });
 
-    const questionBankAllButton = chooser.querySelector("[data-review-question-bank-all]");
-    if (questionBankAllButton && !questionBankAllButton.disabled) {
-        questionBankAllButton.addEventListener("click", startQuestionBankReview);
-    }
+    const bankButton = chooser.querySelector("[data-review-question-bank-all]");
+    if (bankButton && !bankButton.disabled) bankButton.addEventListener("click", startQuestionBankReview);
 }
 
 function renderReviewPool() {
@@ -272,219 +278,205 @@ function renderReviewPool() {
     const countElement = document.getElementById("unlocked-task-count");
     if (!container) return;
 
-    const html = [];
-    let logicalCount = 0;
+    const rows = [];
 
-    // 行测：显示板块 + 已导入的章节，方便确认当前可复习范围。
-    const xingcePanels = REVIEW_XINGCE_MODULES.map(module => {
-        const chapters = getXingceChapterRecords(module)
-            .filter(record => record.unlockedQuestions.length > 0 || Boolean(progress[record.task.id]));
-        const unlocked = getUnlockedQuestionsForMajorModule("行测", module);
-        if (!chapters.length && !unlocked.length) return "";
-        logicalCount += Math.max(1, chapters.length);
-        return `
-            <div class="review-pool-major-panel">
-                <div class="review-pool-major-title">
-                    <strong>${module}</strong>
-                    <span>${unlocked.length} 道已解锁</span>
-                </div>
-                <div class="review-pool-module-grid">
-                    ${chapters.map(({ task, allQuestions, unlockedQuestions }, index) => `
-                        <div class="review-card review-pool-module-card">
-                            <strong>${index + 1}. ${task.name}</strong>
-                            <span>${unlockedQuestions.length}/${allQuestions.length} 道已解锁</span>
-                        </div>
-                    `).join("")}
-                </div>
-            </div>
-        `;
-    }).filter(Boolean).join("");
+    REVIEW_XINGCE_MODULES.forEach(module => {
+        getXingceChapterRecords(module)
+            .filter(record => record.unlockedQuestions.length > 0 || Boolean(progress[record.task.id]))
+            .forEach(({ task, allQuestions, unlockedQuestions }) => {
+                rows.push(`
+                    <div class="review-pool-compact-row">
+                        <strong>行测 · ${module} · ${task.name}</strong>
+                        <span>${unlockedQuestions.length}/${allQuestions.length} 道已解锁</span>
+                    </div>
+                `);
+            });
+    });
 
-    if (xingcePanels) {
-        html.push(`
-            <div class="review-pool-category">
-                <div class="review-pool-category-title">行测</div>
-                ${xingcePanels}
-            </div>
-        `);
-    }
-
-    const computerRecords = studyPlan
+    studyPlan
         .filter(task => task.category === "计算机")
-        .map(task => {
+        .forEach(task => {
             const allQuestions = getAllQuestionsForTask(task.id);
             const unlockedQuestions = allQuestions.filter(questionIsUnlocked);
-            return { task, allQuestions, unlockedQuestions };
-        })
-        .filter(({ task, unlockedQuestions }) => Boolean(progress[task.id]) || unlockedQuestions.length > 0);
-
-    if (computerRecords.length > 0) {
-        logicalCount += computerRecords.length;
-        html.push(`
-            <div class="review-pool-category">
-                <div class="review-pool-category-title">计算机</div>
-                <div class="review-pool-module-grid">
-                    ${computerRecords.map(({ task, allQuestions, unlockedQuestions }) => `
-                        <div class="review-card review-pool-module-card">
-                            <strong>${task.name}</strong>
-                            <span>${unlockedQuestions.length}/${allQuestions.length} 道已解锁</span>
-                            <small>${task.module || ""}</small>
-                        </div>
-                    `).join("")}
+            if (!allQuestions.length || (!unlockedQuestions.length && !progress[task.id])) return;
+            rows.push(`
+                <div class="review-pool-compact-row">
+                    <strong>计算机 · ${task.name}</strong>
+                    <span>${unlockedQuestions.length}/${allQuestions.length} 道已解锁</span>
                 </div>
-            </div>
-        `);
-    }
+            `);
+        });
 
-    const bankRecords = getQuestionBankRecords().filter(record => record.unlockedQuestions.length > 0);
-    if (bankRecords.length > 0) {
-        logicalCount += bankRecords.length;
-        html.push(`
-            <div class="review-pool-category">
-                <div class="review-pool-category-title">${REVIEW_QUESTION_BANK_LABEL}</div>
-                <div class="review-pool-module-grid">
-                    ${bankRecords.map(({ task, allQuestions, unlockedQuestions }) => `
-                        <div class="review-card review-pool-module-card">
-                            <strong>${task.week || task.name}</strong>
-                            <span>${unlockedQuestions.length}/${allQuestions.length} 道已解锁</span>
-                            <small>${task.name}</small>
-                        </div>
-                    `).join("")}
+    getQuestionBankRecords()
+        .filter(record => record.unlockedQuestions.length > 0)
+        .forEach(({ task, allQuestions, unlockedQuestions }) => {
+            rows.push(`
+                <div class="review-pool-compact-row">
+                    <strong>${REVIEW_QUESTION_BANK_LABEL} · ${task.week || task.name}</strong>
+                    <span>${unlockedQuestions.length}/${allQuestions.length} 道已解锁</span>
                 </div>
-            </div>
-        `);
-    }
+            `);
+        });
 
-    if (countElement) countElement.textContent = `${logicalCount} 项`;
-
-    container.innerHTML = html.length
-        ? html.join("")
-        : `<div class="empty-message">还没有已经解锁的复习内容</div>`;
+    if (countElement) countElement.textContent = `${rows.length} 项`;
+    container.innerHTML = rows.length ? rows.join("") : `<div class="empty-message">还没有已经解锁的复习内容</div>`;
 }
 
-(function installHierarchicalReviewStyles() {
-    if (document.getElementById("hierarchical-review-styles")) return;
+(function installCompactReviewStyles() {
+    const old = document.getElementById("hierarchical-review-styles");
+    if (old) old.remove();
 
     const style = document.createElement("style");
     style.id = "hierarchical-review-styles";
     style.textContent = `
-        .review-section-group + .review-section-group { margin-top: 22px; }
+        .review-section-group + .review-section-group { margin-top: 20px; }
         .review-section-group-title {
-            margin: 0 0 12px;
-            color: #525866;
-            font-size: 15px;
+            margin: 0 0 10px;
+            color: #4f5665;
+            font-size: 16px;
             font-weight: 800;
         }
-        .review-xingce-modules { display: grid; gap: 14px; }
+        .review-xingce-modules { display: grid; gap: 10px; }
         .review-major-panel {
-            padding: 14px;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid #e3e6eb;
+            border-radius: 13px;
+            background: #fff;
+        }
+        .review-major-panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 10px 12px;
+            border-bottom: 1px solid #eceef2;
             background: #fafbfc;
         }
-        .review-major-panel-head,
-        .review-bank-summary {
+        .review-major-title-block {
+            display: flex;
+            align-items: baseline;
+            gap: 9px;
+            min-width: 0;
+        }
+        .review-major-panel-title { font-size: 15px; }
+        .review-major-panel-count { color: #667085; font-size: 12px; white-space: nowrap; }
+        .review-major-actions,
+        .review-row-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+        .review-major-actions button,
+        .review-row-actions button {
+            width: auto !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            border-radius: 8px;
+            box-shadow: none;
+        }
+        .review-major-actions button {
+            min-height: 32px;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+        .review-chapter-list { display: block; }
+        .review-chapter-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 12px;
+            min-height: 48px;
+            padding: 7px 12px;
+            border-bottom: 1px solid #f0f1f3;
+        }
+        .review-chapter-row:last-child { border-bottom: 0; }
+        .review-chapter-row:hover { background: #fafbfc; }
+        .review-chapter-row.is-locked { background: #fbfbfc; }
+        .review-chapter-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .review-chapter-index {
+            width: 24px;
+            flex: 0 0 24px;
+            color: #98a2b3;
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+        }
+        .review-chapter-copy {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            min-width: 0;
+        }
+        .review-chapter-copy strong {
+            overflow: hidden;
+            color: #24262b;
+            font-size: 14px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .review-chapter-copy small {
+            color: #8a93a3;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .review-row-actions button {
+            min-height: 30px;
+            padding: 5px 9px;
+            font-size: 12px;
+        }
+        .review-row-view,
+        .review-view-module-button {
+            background: #fff !important;
+            color: #596273 !important;
+            border: 1px solid #d9dde5 !important;
+        }
+        .review-row-start:disabled,
+        .review-all-module-button:disabled {
+            opacity: .42;
+            cursor: not-allowed;
+        }
+        .review-chapter-empty {
+            padding: 10px 12px;
+            color: #98a2b3;
+            font-size: 12px;
+        }
+        .review-pool-compact-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin-bottom: 10px;
-        }
-        .review-major-panel-head > div,
-        .review-bank-summary > div {
-            display: flex;
-            align-items: baseline;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .review-major-panel-title { font-size: 16px; }
-        .review-major-panel-count,
-        .review-bank-summary span { color: #667085; font-size: 13px; }
-        .review-all-module-button {
-            min-height: 36px;
-            padding: 8px 13px;
-            border-radius: 9px;
-            border: 1px solid #cfd4dc;
-            background: #fff;
-            color: #24262b;
-            font-weight: 700;
-            cursor: pointer;
-        }
-        .review-all-module-button:disabled { opacity: .45; cursor: default; }
-        .review-chapter-label {
-            margin: 8px 0;
-            color: #7a8190;
-            font-size: 12px;
-            font-weight: 700;
-        }
-        .review-chapter-grid {
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
-        }
-        .review-chapter-button,
-        .review-bank-week-button { min-height: 76px; }
-        .review-section-button small {
-            display: block;
-            margin-top: 4px;
-            color: #8a9099;
-            font-size: 11px;
-            line-height: 1.45;
-        }
-        .review-chapter-empty {
-            padding: 12px;
-            border-radius: 10px;
-            background: #fff;
-            color: #9aa0aa;
+            padding: 8px 2px;
+            border-bottom: 1px solid #eceef2;
             font-size: 13px;
         }
-        .review-question-bank-group {
-            padding: 14px;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            background: #fafbfc;
-        }
-        .review-bank-grid {
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
-        }
-        .review-pool-category + .review-pool-category { margin-top: 20px; }
-        .review-pool-category-title {
-            margin: 0 0 10px;
-            color: #68686d;
-            font-size: 13px;
-            font-weight: 700;
-        }
-        .review-pool-major-panel + .review-pool-major-panel { margin-top: 12px; }
-        .review-pool-major-title {
-            display: flex;
-            gap: 10px;
-            align-items: baseline;
-            margin-bottom: 8px;
-        }
-        .review-pool-major-title span { color: #667085; font-size: 12px; }
-        .review-pool-module-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 9px;
-        }
-        .review-pool-module-card {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 5px;
-            margin: 0;
-        }
-        .review-pool-module-card span,
-        .review-pool-module-card small { color: #667085; }
+        .review-pool-compact-row:last-child { border-bottom: 0; }
+        .review-pool-compact-row span { color: #667085; white-space: nowrap; }
+
         @media (max-width: 720px) {
-            .review-major-panel-head,
-            .review-bank-summary { align-items: stretch; flex-direction: column; }
-            .review-all-module-button { width: 100%; }
-            .review-chapter-grid,
-            .review-bank-grid { grid-template-columns: 1fr !important; }
+            .review-major-panel-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .review-chapter-row {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+            .review-chapter-copy {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 2px;
+            }
+            .review-row-actions {
+                padding-left: 34px;
+            }
         }
     `;
-
     document.head.appendChild(style);
 })();
 
-// scheduled-questionbank.js 已经先渲染过一次，覆盖函数后立即按新结构重绘。
 renderReviewPool();
