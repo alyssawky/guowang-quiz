@@ -1,7 +1,7 @@
-// 首页顶部：今日必刷题 + 提前记忆卡片
+// 首页顶部：今日正式刷题 + 累计记忆卡 + 明日提前预习
 // 记忆阶段只展示题库原始题干/选项/标准答案，不写入 answerHistory，不影响正确率和错题本。
 (function () {
-    const DAILY_PRACTICE_VERSION = 3;
+    const DAILY_PRACTICE_VERSION = 4;
     const MEMORY_STORE_KEY = "guowang-daily-memory-v1";
 
     let styleLink = document.querySelector('link[data-daily-practice-style]');
@@ -11,7 +11,7 @@
         styleLink.dataset.dailyPracticeStyle = "true";
         document.head.appendChild(styleLink);
     }
-    styleLink.href = "daily-practice.css?v=20260816-2";
+    styleLink.href = "daily-practice.css?v=20260816-3";
 
     function initDailyPractice() {
         if (Number(window.__dailyPracticeVersion || 0) >= DAILY_PRACTICE_VERSION) return;
@@ -21,6 +21,8 @@
         let memoryQuestionIds = [];
         let memoryIndex = 0;
         let memoryAnswerShown = false;
+        let memoryMode = null;
+        let memoryDate = null;
 
         function safeParse(value, fallback) {
             try {
@@ -46,6 +48,15 @@
             return `${y}-${m}-${d}`;
         }
 
+        function addLocalDays(dateString, days) {
+            const date = typeof parseLocalDate === "function"
+                ? parseLocalDate(dateString)
+                : new Date(`${dateString}T00:00:00`);
+            if (!date || Number.isNaN(date.getTime())) return dateString;
+            date.setDate(date.getDate() + days);
+            return toLocalISO(date);
+        }
+
         function isRequiredBankQuestion(question) {
             return Boolean(
                 question &&
@@ -57,6 +68,12 @@
         function getQuestionsForDate(dateString) {
             return questions.filter(question =>
                 isRequiredBankQuestion(question) && question.unlockDate === dateString
+            );
+        }
+
+        function getCumulativeMemoryPool(todayString) {
+            return questions.filter(question =>
+                isRequiredBankQuestion(question) && question.unlockDate < todayString
             );
         }
 
@@ -83,6 +100,7 @@
         }
 
         function markQuestionRemembered(dateString, questionId) {
+            if (!dateString) return;
             const store = loadMemoryStore();
             const current = store[dateString] && Array.isArray(store[dateString].seen)
                 ? store[dateString].seen
@@ -110,47 +128,58 @@
         }
 
         function formatCNDate(dateString) {
-            const date = parseLocalDate(dateString);
-            if (!date) return dateString;
+            const date = typeof parseLocalDate === "function"
+                ? parseLocalDate(dateString)
+                : new Date(`${dateString}T00:00:00`);
+            if (!date || Number.isNaN(date.getTime())) return dateString;
             const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
             return `${date.getMonth() + 1}月${date.getDate()}日 · ${weekdays[date.getDay()]}`;
         }
 
         function getDailyState() {
             const today = toLocalISO();
-            const all = getQuestionsForDate(today);
-            const completed = all.filter(hasBeenAnswered);
-            const remaining = all.filter(question => !hasBeenAnswered(question));
-            const rememberedIds = getRememberedIds(today);
-            const remembered = all.filter(question => rememberedIds.has(question.id));
+            const tomorrow = addLocalDays(today, 1);
+
+            const practiceAll = getQuestionsForDate(today);
+            const practiceCompleted = practiceAll.filter(hasBeenAnswered);
+            const practiceRemaining = practiceAll.filter(question => !hasBeenAnswered(question));
+            const cumulativePool = getCumulativeMemoryPool(today);
+
+            const previewAll = getQuestionsForDate(tomorrow);
+            const previewRememberedIds = getRememberedIds(tomorrow);
+            const previewRemembered = previewAll.filter(question => previewRememberedIds.has(question.id));
+
             return {
                 today,
-                all,
-                completed,
-                remaining,
-                remembered,
-                rememberedIds,
+                tomorrow,
+                practiceAll,
+                practiceCompleted,
+                practiceRemaining,
+                cumulativePool,
+                previewAll,
+                previewRemembered,
+                previewRememberedIds,
                 next: getNextPlannedDay(today)
             };
         }
 
         function startDailyPractice() {
             const state = getDailyState();
-            if (!state.all.length) return;
+            if (!state.practiceAll.length) return;
 
             closeDailyMemoryCards();
 
-            const sessionQuestions = state.remaining.length
-                ? shuffleArray(state.remaining)
-                : shuffleArray(state.all);
+            const sessionQuestions = state.practiceRemaining.length
+                ? shuffleArray(state.practiceRemaining)
+                : shuffleArray(state.practiceAll);
 
-            const title = state.remaining.length
+            const title = state.practiceRemaining.length
                 ? "今日必刷题"
                 : "今日必刷题 · 重刷";
 
-            const sequenceText = state.remaining.length
-                ? `${formatCNDate(state.today)} · 今日计划${state.all.length}题 · 剩余${state.remaining.length}题`
-                : `${formatCNDate(state.today)} · 今日${state.all.length}题已全部做过，本轮重新练习`;
+            const sequenceText = state.practiceRemaining.length
+                ? `${formatCNDate(state.today)} · 今日计划${state.practiceAll.length}题 · 剩余${state.practiceRemaining.length}题`
+                : `${formatCNDate(state.today)} · 今日${state.practiceAll.length}题已全部做过，本轮重新练习`;
 
             startQuestionSession(sessionQuestions, title, sequenceText);
 
@@ -182,6 +211,8 @@
             memoryQuestionIds = [];
             memoryIndex = 0;
             memoryAnswerShown = false;
+            memoryMode = null;
+            memoryDate = null;
         }
 
         function getCorrectAnswerText(question) {
@@ -208,15 +239,31 @@
             `;
         }
 
+        function getMemoryHeader() {
+            if (memoryMode === "preview") {
+                return {
+                    kicker: "PREVIEW · ONE DAY EARLY",
+                    title: "明日提前预习",
+                    description: `${formatCNDate(memoryDate)} · 明天正式刷题，今天先记忆。`
+                };
+            }
+
+            return {
+                kicker: "CUMULATIVE MEMORY",
+                title: "累计记忆复习",
+                description: "以前已经学过的国网题会持续累积进卡池，每次打开都会随机换顺序。"
+            };
+        }
+
         function renderDailyMemoryCard() {
             const panel = getMemoryPanel();
             if (!panel || !memoryQuestionIds.length) return;
 
-            const state = getDailyState();
             const question = getQuestionById(memoryQuestionIds[memoryIndex]);
             if (!question) return;
 
             const total = memoryQuestionIds.length;
+            const header = getMemoryHeader();
             const correctAnswerText = getCorrectAnswerText(question);
             const sourceNotes = [
                 question.explanation && !String(question.explanation).includes("按2026题库标准答案判定")
@@ -224,6 +271,10 @@
                     : "",
                 question.note || ""
             ].filter(Boolean);
+
+            const previewRemembered = memoryMode === "preview"
+                ? memoryQuestionIds.filter(id => getRememberedIds(memoryDate).has(id)).length
+                : 0;
 
             const answerHTML = memoryAnswerShown
                 ? `
@@ -239,7 +290,7 @@
                 `
                 : `
                     <div class="daily-memory-answer daily-memory-answer-hidden">
-                        先回忆答案，再点击下方“显示答案”。记忆阶段不会计入正确率。
+                        先自己回忆，再点击“显示答案”。记忆阶段不会计入正确率，也不会进入错题本。
                     </div>
                 `;
 
@@ -247,16 +298,16 @@
             panel.innerHTML = `
                 <div class="daily-memory-head">
                     <div>
-                        <div class="daily-practice-kicker">PREVIEW CARDS</div>
-                        <h2>今日提前记忆</h2>
-                        <p>先认识今天要考的记忆内容，再进入正式刷题。</p>
+                        <div class="daily-practice-kicker">${header.kicker}</div>
+                        <h2>${header.title}</h2>
+                        <p>${header.description}</p>
                     </div>
                     <button type="button" class="daily-memory-close" id="close-daily-memory" aria-label="关闭记忆卡">×</button>
                 </div>
 
                 <div class="daily-memory-status">
-                    <span>记忆卡 ${memoryIndex + 1}/${total}</span>
-                    <span>今日已看答案 ${state.remembered.length}/${state.all.length}</span>
+                    <span>${memoryMode === "preview" ? "预习卡" : "随机卡"} ${memoryIndex + 1}/${total}</span>
+                    <span>${memoryMode === "preview" ? `已看答案 ${previewRemembered}/${total}` : `累计卡池 ${total} 题`}</span>
                 </div>
 
                 <article class="daily-memory-card-inner">
@@ -279,9 +330,12 @@
                             <button type="button" class="daily-memory-primary" id="memory-reveal">显示答案</button>
                         ` : memoryIndex < total - 1 ? `
                             <button type="button" class="daily-memory-primary" id="memory-next">下一张</button>
+                        ` : memoryMode === "cumulative" ? `
+                            <button type="button" class="daily-memory-secondary" id="memory-close-finish">结束本轮</button>
+                            <button type="button" class="daily-memory-primary" id="memory-reshuffle">再随机一轮</button>
                         ` : `
                             <button type="button" class="daily-memory-secondary" id="memory-restart">从头再看</button>
-                            <button type="button" class="daily-memory-primary" id="memory-start-practice">开始今日刷题</button>
+                            <button type="button" class="daily-memory-primary" id="memory-close-finish">完成明日预习</button>
                         `}
                     </div>
                 </div>
@@ -294,7 +348,7 @@
             if (prev && !prev.disabled) {
                 prev.addEventListener("click", () => {
                     memoryIndex -= 1;
-                    memoryAnswerShown = state.rememberedIds.has(memoryQuestionIds[memoryIndex]);
+                    memoryAnswerShown = false;
                     renderDailyMemoryCard();
                 });
             }
@@ -302,7 +356,7 @@
             const reveal = document.getElementById("memory-reveal");
             if (reveal) {
                 reveal.addEventListener("click", () => {
-                    markQuestionRemembered(state.today, question.id);
+                    if (memoryMode === "preview") markQuestionRemembered(memoryDate, question.id);
                     memoryAnswerShown = true;
                     renderDailyMemoryCard();
                     renderDailyPracticeCard();
@@ -313,8 +367,7 @@
             if (next) {
                 next.addEventListener("click", () => {
                     memoryIndex += 1;
-                    const nextState = getDailyState();
-                    memoryAnswerShown = nextState.rememberedIds.has(memoryQuestionIds[memoryIndex]);
+                    memoryAnswerShown = false;
                     renderDailyMemoryCard();
                 });
             }
@@ -323,24 +376,52 @@
             if (restart) {
                 restart.addEventListener("click", () => {
                     memoryIndex = 0;
-                    const restartState = getDailyState();
-                    memoryAnswerShown = restartState.rememberedIds.has(memoryQuestionIds[0]);
+                    memoryAnswerShown = false;
                     renderDailyMemoryCard();
                 });
             }
 
-            const startPractice = document.getElementById("memory-start-practice");
-            if (startPractice) startPractice.addEventListener("click", startDailyPractice);
+            const reshuffle = document.getElementById("memory-reshuffle");
+            if (reshuffle) {
+                reshuffle.addEventListener("click", () => {
+                    const state = getDailyState();
+                    memoryQuestionIds = shuffleArray(state.cumulativePool).map(question => question.id);
+                    memoryIndex = 0;
+                    memoryAnswerShown = false;
+                    renderDailyMemoryCard();
+                });
+            }
+
+            const finish = document.getElementById("memory-close-finish");
+            if (finish) finish.addEventListener("click", closeDailyMemoryCards);
         }
 
-        function openDailyMemoryCards() {
+        function openCumulativeMemoryCards() {
             const state = getDailyState();
-            if (!state.all.length) return;
+            if (!state.cumulativePool.length) return;
 
-            memoryQuestionIds = state.all.map(question => question.id);
-            const firstUnseenIndex = memoryQuestionIds.findIndex(id => !state.rememberedIds.has(id));
-            memoryIndex = firstUnseenIndex >= 0 ? firstUnseenIndex : 0;
-            memoryAnswerShown = state.rememberedIds.has(memoryQuestionIds[memoryIndex]);
+            memoryMode = "cumulative";
+            memoryDate = null;
+            memoryQuestionIds = shuffleArray(state.cumulativePool).map(question => question.id);
+            memoryIndex = 0;
+            memoryAnswerShown = false;
+            renderDailyMemoryCard();
+
+            const panel = document.getElementById("daily-memory-panel");
+            if (panel) panel.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        function openPreviewMemoryCards() {
+            const state = getDailyState();
+            if (!state.previewAll.length) return;
+
+            memoryMode = "preview";
+            memoryDate = state.tomorrow;
+            memoryQuestionIds = state.previewAll.map(question => question.id);
+
+            const firstUnseen = memoryQuestionIds.findIndex(id => !state.previewRememberedIds.has(id));
+            memoryIndex = firstUnseen >= 0 ? firstUnseen : 0;
+            memoryAnswerShown = false;
             renderDailyMemoryCard();
 
             const panel = document.getElementById("daily-memory-panel");
@@ -360,74 +441,104 @@
             }
 
             const state = getDailyState();
+            const practiceTotal = state.practiceAll.length;
+            const practiceDone = state.practiceCompleted.length;
+            const cumulativeTotal = state.cumulativePool.length;
+            const previewTotal = state.previewAll.length;
+            const previewDone = state.previewRemembered.length;
+            const practicePercent = practiceTotal ? Math.round((practiceDone / practiceTotal) * 100) : 0;
+            const previewPercent = previewTotal ? Math.round((previewDone / previewTotal) * 100) : 0;
 
-            if (!state.all.length) {
+            if (!practiceTotal && !cumulativeTotal && !previewTotal) {
                 const nextText = state.next
-                    ? `下一次：${formatCNDate(state.next.date)} · ${state.next.count}题`
-                    : "本阶段每日必刷题已经全部安排完毕";
+                    ? `下一次正式刷题：${formatCNDate(state.next.date)} · ${state.next.count}题。预习卡只会提前1天开放。`
+                    : "本阶段每日必刷题已经全部安排完毕。";
 
                 card.innerHTML = `
                     <div class="daily-practice-copy">
                         <div class="daily-practice-kicker">DAILY PRACTICE</div>
                         <div class="daily-practice-title-row">
-                            <h2>今日必刷题</h2>
-                            <span class="daily-practice-count">今日0题</span>
+                            <h2>国网每日记忆与刷题</h2>
+                            <span class="daily-practice-count">当前无任务</span>
                         </div>
-                        <p>今天没有安排新的国网必刷题。${nextText}</p>
+                        <p>${nextText}</p>
                     </div>
-                    <button type="button" class="daily-practice-button" disabled>今日无新题</button>
+                    <button type="button" class="daily-practice-button" disabled>当前无任务</button>
                 `;
                 return;
             }
 
-            const done = state.completed.length;
-            const total = state.all.length;
-            const remembered = state.remembered.length;
-            const practicePercent = Math.round((done / total) * 100);
-            const memoryPercent = Math.round((remembered / total) * 100);
-            const buttonText = state.remaining.length
-                ? (done ? `继续今日任务 · ${state.remaining.length}题` : `开始今日${total}题`)
-                : `重刷今日${total}题`;
-            const memoryButtonText = remembered === total
-                ? `复习今日记忆卡 · ${total}张`
-                : `先记忆今日${total}题`;
+            const practiceButtonText = practiceTotal
+                ? (state.practiceRemaining.length
+                    ? (practiceDone ? `继续今日任务 · ${state.practiceRemaining.length}题` : `开始今日${practiceTotal}题`)
+                    : `重刷今日${practiceTotal}题`)
+                : "今日无新题";
+
+            const previewButtonText = previewTotal
+                ? (previewDone === previewTotal
+                    ? `复习明日预习卡 · ${previewTotal}张`
+                    : `预习明日${previewTotal}题`)
+                : "明日无预习";
+
+            const cumulativeButtonText = cumulativeTotal
+                ? `随机复习累计${cumulativeTotal}题`
+                : "暂无累计旧题";
+
+            const summaryBits = [
+                `累计记忆 ${cumulativeTotal}题`,
+                practiceTotal ? `今日刷题 ${practiceDone}/${practiceTotal}` : "今日刷题 0",
+                previewTotal ? `明日预习 ${previewDone}/${previewTotal}` : "明日预习 0"
+            ];
+
+            const description = [
+                cumulativeTotal ? `旧题已累计${cumulativeTotal}题，可随时随机回忆。` : "目前还没有往日旧题进入累计卡池。",
+                practiceTotal ? `今天正式刷${practiceTotal}题。` : "今天没有正式刷题任务。",
+                previewTotal ? `明天${previewTotal}题已提前开放预习。` : "明天没有安排新题。"
+            ].join(" ");
 
             card.innerHTML = `
                 <div class="daily-practice-copy">
                     <div class="daily-practice-kicker">DAILY PRACTICE</div>
                     <div class="daily-practice-title-row">
-                        <h2>今日必刷题</h2>
-                        <span class="daily-practice-count">刷题 ${done}/${total} · 记忆 ${remembered}/${total}</span>
+                        <h2>国网每日记忆与刷题</h2>
+                        <span class="daily-practice-count">${summaryBits.join(" · ")}</span>
                     </div>
-                    <p>${formatCNDate(state.today)} · 先记忆，再正式作答；记忆卡不计正确率、不进入错题本。</p>
+                    <p>${description} 记忆卡不计正确率、不进入错题本。</p>
                     <div class="daily-dual-progress">
-                        <div>
-                            <span class="daily-progress-label">提前记忆</span>
-                            <div class="daily-practice-progress daily-memory-progress"><span style="width:${memoryPercent}%"></span></div>
-                        </div>
-                        <div>
-                            <span class="daily-progress-label">正式刷题</span>
-                            <div class="daily-practice-progress"><span style="width:${practicePercent}%"></span></div>
-                        </div>
+                        ${previewTotal ? `
+                            <div>
+                                <span class="daily-progress-label">明日提前预习</span>
+                                <div class="daily-practice-progress daily-memory-progress"><span style="width:${previewPercent}%"></span></div>
+                            </div>
+                        ` : ""}
+                        ${practiceTotal ? `
+                            <div>
+                                <span class="daily-progress-label">今日正式刷题</span>
+                                <div class="daily-practice-progress"><span style="width:${practicePercent}%"></span></div>
+                            </div>
+                        ` : ""}
                     </div>
                 </div>
                 <div class="daily-practice-actions">
-                    <button type="button" class="daily-practice-button daily-practice-button-secondary" id="start-daily-memory">${memoryButtonText}</button>
-                    <button type="button" class="daily-practice-button" id="start-daily-practice">${buttonText}</button>
+                    <button type="button" class="daily-practice-button daily-practice-button-secondary" id="start-cumulative-memory" ${cumulativeTotal ? "" : "disabled"}>${cumulativeButtonText}</button>
+                    <button type="button" class="daily-practice-button daily-practice-button-secondary" id="start-daily-memory" ${previewTotal ? "" : "disabled"}>${previewButtonText}</button>
+                    <button type="button" class="daily-practice-button" id="start-daily-practice" ${practiceTotal ? "" : "disabled"}>${practiceButtonText}</button>
                 </div>
             `;
 
-            const memoryButton = document.getElementById("start-daily-memory");
-            if (memoryButton) memoryButton.addEventListener("click", openDailyMemoryCards);
+            const cumulativeButton = document.getElementById("start-cumulative-memory");
+            if (cumulativeButton && !cumulativeButton.disabled) cumulativeButton.addEventListener("click", openCumulativeMemoryCards);
+
+            const previewButton = document.getElementById("start-daily-memory");
+            if (previewButton && !previewButton.disabled) previewButton.addEventListener("click", openPreviewMemoryCards);
 
             const practiceButton = document.getElementById("start-daily-practice");
-            if (practiceButton) practiceButton.addEventListener("click", startDailyPractice);
+            if (practiceButton && !practiceButton.disabled) practiceButton.addEventListener("click", startDailyPractice);
         }
 
-        // 每次正式答案记录后刷新今日刷题进度；记忆卡本身不会调用 recordAnswer。
         const originalRecordAnswer = window.recordAnswer;
-        if (typeof originalRecordAnswer === "function" && !window.__dailyPracticeRecordWrappedV3) {
-            window.__dailyPracticeRecordWrappedV3 = true;
+        if (typeof originalRecordAnswer === "function" && !window.__dailyPracticeRecordWrappedV4) {
+            window.__dailyPracticeRecordWrappedV4 = true;
             window.recordAnswer = function (...args) {
                 const result = originalRecordAnswer.apply(this, args);
                 renderDailyPracticeCard();
@@ -437,7 +548,9 @@
 
         window.renderDailyPracticeCard = renderDailyPracticeCard;
         window.startDailyPractice = startDailyPractice;
-        window.openDailyMemoryCards = openDailyMemoryCards;
+        window.openDailyMemoryCards = openPreviewMemoryCards;
+        window.openPreviewMemoryCards = openPreviewMemoryCards;
+        window.openCumulativeMemoryCards = openCumulativeMemoryCards;
         window.closeDailyMemoryCards = closeDailyMemoryCards;
         renderDailyPracticeCard();
     }
