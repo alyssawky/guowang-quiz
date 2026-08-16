@@ -24,8 +24,6 @@
     }
 
     function applyStrictDailyUnlockRule() {
-        // 国网题库永远按题目自身 unlockDate 逐日释放，
-        // 不再因为整周打卡被勾选而一次性解锁50题。
         window.questionIsUnlocked = function (question) {
             const task = studyPlan.find(item => item.id === question.taskId);
             if (!task || !task.questionBank) {
@@ -53,7 +51,6 @@
                 return;
             }
 
-            // 发现0题、残缺或重复时，先清掉该周，再完整重载，保证最终严格等于50题。
             removeWeek(taskId);
 
             const old = document.querySelector(`script[data-bank-rescue="${taskId}"]`);
@@ -71,14 +68,16 @@
         });
     }
 
-    function loadDailyPracticeModule() {
-        if (window.__dailyPracticeInstalled) return Promise.resolve();
+    function loadScriptOnce(src, dataAttr) {
         return new Promise(resolve => {
-            const old = document.querySelector('script[data-daily-practice-loader]');
-            if (old) old.remove();
+            const selector = `script[${dataAttr}]`;
+            if (document.querySelector(selector)) {
+                resolve();
+                return;
+            }
             const script = document.createElement("script");
-            script.src = `daily-practice.js?v=20260816-2&reload=${Date.now()}`;
-            script.dataset.dailyPracticeLoader = "true";
+            script.src = `${src}${src.includes("?") ? "&" : "?"}reload=${Date.now()}`;
+            script.setAttribute(dataAttr, "true");
             script.onload = () => resolve();
             script.onerror = () => resolve();
             document.body.appendChild(script);
@@ -98,10 +97,12 @@
             expectedWeeks.map(([taskId]) => [taskId, countWeek(taskId)])
         );
         const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-
         console.info("国网必刷题完整性检查", counts, `total=${total}`);
 
-        await loadDailyPracticeModule();
+        // 一次性清掉此前用于测试界面的答题记录。
+        await loadScriptOnce("reset-test-answer-history.js?v=20260816-1", "data-answer-history-reset-loader");
+        await loadScriptOnce("daily-practice.js?v=20260816-2", "data-daily-practice-loader");
+
         refreshQuestionViews();
     }
 
