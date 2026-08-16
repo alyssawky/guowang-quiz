@@ -26,9 +26,7 @@
     function applyStrictDailyUnlockRule() {
         window.questionIsUnlocked = function (question) {
             const task = studyPlan.find(item => item.id === question.taskId);
-            if (!task || !task.questionBank) {
-                return Boolean(progress[question.taskId]);
-            }
+            if (!task || !task.questionBank) return Boolean(progress[question.taskId]);
             if (!question.unlockDate) return false;
             const unlockDate = parseLocalDate(question.unlockDate);
             return Boolean(unlockDate && unlockDate <= startOfDay());
@@ -43,6 +41,7 @@
         if (typeof updateDashboardStats === "function") updateDashboardStats();
         if (typeof renderDailyPracticeCard === "function") renderDailyPracticeCard();
         if (typeof updateRestrictedAccuracyGauge === "function") updateRestrictedAccuracyGauge();
+        if (typeof refreshBankMemoryKnowledge === "function") refreshBankMemoryKnowledge();
     }
 
     function loadWeek(taskId, src) {
@@ -51,12 +50,9 @@
                 resolve();
                 return;
             }
-
             removeWeek(taskId);
-
             const old = document.querySelector(`script[data-bank-rescue="${taskId}"]`);
             if (old) old.remove();
-
             const script = document.createElement("script");
             script.src = `${src}&reload=${Date.now()}`;
             script.dataset.bankRescue = taskId;
@@ -72,10 +68,8 @@
     function loadScriptOnce(src, dataAttr) {
         return new Promise(resolve => {
             const selector = `script[${dataAttr}]`;
-            if (document.querySelector(selector)) {
-                resolve();
-                return;
-            }
+            const existing = document.querySelector(selector);
+            if (existing) existing.remove();
             const script = document.createElement("script");
             script.src = `${src}${src.includes("?") ? "&" : "?"}reload=${Date.now()}`;
             script.setAttribute(dataAttr, "true");
@@ -89,32 +83,18 @@
         applyStrictDailyUnlockRule();
 
         for (const [taskId, src] of expectedWeeks) {
-            if (countWeek(taskId) !== 50) {
-                await loadWeek(taskId, src);
-            }
+            if (countWeek(taskId) !== 50) await loadWeek(taskId, src);
         }
 
-        const counts = Object.fromEntries(
-            expectedWeeks.map(([taskId]) => [taskId, countWeek(taskId)])
-        );
+        const counts = Object.fromEntries(expectedWeeks.map(([taskId]) => [taskId, countWeek(taskId)]));
         const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
         console.info("国网必刷题完整性检查", counts, `total=${total}`);
 
         await loadScriptOnce("reset-test-answer-history.js?v=20260816-1", "data-answer-history-reset-loader");
-
-        // 国网记忆卡知识层：先加载经核验的概念解析和保守兜底模板。
         await loadScriptOnce("bank-memory-knowledge.js?v=20260816-1", "data-bank-memory-knowledge-loader");
-
-        // 三层结构：往日题累计记忆 + 明日题提前1天预习 + 今日正式刷题。
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
-
-        // 累计记忆不再全池等概率随机：按1/2/4/7/15/30天间隔，到期与逾期题优先加权抽取。
         await loadScriptOnce("memory-curve.js?v=20260816-1", "data-memory-curve-loader");
-
-        // 给预习卡和记忆曲线卡统一展示“知识点解析 / 易混辨析 / 记忆钩子”。
-        await loadScriptOnce("memory-knowledge-ui.js?v=20260816-1", "data-memory-knowledge-ui-loader");
-
-        // 正确率只统计完整刷完的章节；章节复习支持断点续刷。
+        await loadScriptOnce("memory-knowledge-ui.js?v=20260816-2", "data-memory-knowledge-ui-loader");
         await loadScriptOnce("study-session-rules.js?v=20260816-1", "data-study-session-rules-loader");
 
         refreshQuestionViews();
