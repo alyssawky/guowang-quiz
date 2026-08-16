@@ -1,5 +1,4 @@
 // 国网“10月前必学300题”完整性保护 + 每日任务保护。
-// 每次页面启动都检查 Week1~Week6 是否各有 50 题；若某周脚本未成功注册，则强制重新加载。
 (function () {
     const expectedWeeks = [
         ["preoct300-w1", "questions-preoct300-w1.js?v=20260816-4"],
@@ -11,9 +10,7 @@
     ];
 
     function countWeek(taskId) {
-        return Array.isArray(questions)
-            ? questions.filter(question => question.taskId === taskId).length
-            : 0;
+        return Array.isArray(questions) ? questions.filter(q => q.taskId === taskId).length : 0;
     }
 
     function removeWeek(taskId) {
@@ -41,22 +38,18 @@
         if (typeof updateDashboardStats === "function") updateDashboardStats();
         if (typeof renderDailyPracticeCard === "function") renderDailyPracticeCard();
         if (typeof updateRestrictedAccuracyGauge === "function") updateRestrictedAccuracyGauge();
-        if (typeof refreshBankMemoryKnowledge === "function") refreshBankMemoryKnowledge();
     }
 
     function loadWeek(taskId, src) {
         return new Promise(resolve => {
-            if (countWeek(taskId) === 50) {
-                resolve();
-                return;
-            }
+            if (countWeek(taskId) === 50) return resolve();
             removeWeek(taskId);
             const old = document.querySelector(`script[data-bank-rescue="${taskId}"]`);
             if (old) old.remove();
             const script = document.createElement("script");
             script.src = `${src}&reload=${Date.now()}`;
             script.dataset.bankRescue = taskId;
-            script.onload = () => resolve();
+            script.onload = resolve;
             script.onerror = () => {
                 console.error(`题库补载失败：${taskId}`);
                 resolve();
@@ -65,16 +58,19 @@
         });
     }
 
+    // 只加载一次，不再删除已执行脚本后重复执行，避免多层事件包装/监听。
     function loadScriptOnce(src, dataAttr) {
         return new Promise(resolve => {
             const selector = `script[${dataAttr}]`;
-            const existing = document.querySelector(selector);
-            if (existing) existing.remove();
+            if (document.querySelector(selector)) return resolve();
             const script = document.createElement("script");
             script.src = `${src}${src.includes("?") ? "&" : "?"}reload=${Date.now()}`;
             script.setAttribute(dataAttr, "true");
-            script.onload = () => resolve();
-            script.onerror = () => resolve();
+            script.onload = resolve;
+            script.onerror = () => {
+                console.error(`模块加载失败：${src}`);
+                resolve();
+            };
             document.body.appendChild(script);
         });
     }
@@ -87,28 +83,28 @@
         }
 
         const counts = Object.fromEntries(expectedWeeks.map(([taskId]) => [taskId, countWeek(taskId)]));
-        const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-        console.info("国网必刷题完整性检查", counts, `total=${total}`);
+        console.info("国网必刷题完整性检查", counts, `total=${Object.values(counts).reduce((a, b) => a + b, 0)}`);
 
         await loadScriptOnce("reset-test-answer-history.js?v=20260816-1", "data-answer-history-reset-loader");
 
-        // 基础记忆知识层：8/17企业文化重点题 + 全题库保守兜底。
+        // 知识解释层：基础概念 + 形势政策50题详细解析。
         await loadScriptOnce("bank-memory-knowledge.js?v=20260816-1", "data-bank-memory-knowledge-loader");
-
-        // 形势政策50题全部使用专门的知识解析、易混辨析和记忆钩子。
         await loadScriptOnce("bank-memory-policy-knowledge.js?v=20260816-1", "data-bank-memory-policy-loader");
 
-        // 三层结构：往日题累计记忆 + 明日题提前1天预习 + 今日正式刷题。
+        // 今日正式刷题 + 明日提前1天预习。
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
 
-        // 累计记忆按1/2/4/7/15/30天间隔，到期与逾期题优先加权抽取。
-        await loadScriptOnce("memory-curve.js?v=20260816-1", "data-memory-curve-loader");
+        // 累计旧题使用原生答题页做记忆曲线复习，不再渲染独立记忆卡。
+        await loadScriptOnce("memory-curve.js?v=20260816-2", "data-memory-curve-loader");
 
-        // 稳定展示“知识点解析 / 易混辨析 / 记忆钩子”，避免观察器循环重绘。
-        await loadScriptOnce("memory-knowledge-ui.js?v=20260816-2", "data-memory-knowledge-ui-loader");
+        // 明日预习的详细解析只在点击“显示答案”时注入；无 MutationObserver。
+        await loadScriptOnce("preview-knowledge-click.js?v=20260816-1", "data-preview-knowledge-loader");
 
-        // 正确率只统计完整刷完的章节；章节复习支持断点续刷。
+        // 章节门槛与断点续刷。
         await loadScriptOnce("study-session-rules.js?v=20260816-1", "data-study-session-rules-loader");
+
+        // 曲线答题计入总体正确率；未完整章节的普通零散作答仍不计入。
+        await loadScriptOnce("curve-accuracy-addon.js?v=20260816-1", "data-curve-accuracy-loader");
 
         refreshQuestionViews();
     }
