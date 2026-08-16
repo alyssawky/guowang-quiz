@@ -102,11 +102,17 @@
 
         await loadScriptOnce("reset-test-answer-history.js?v=20260816-1", "data-answer-history-reset-loader");
 
+        // 国网记忆卡知识层：先加载经核验的概念解析和保守兜底模板。
+        await loadScriptOnce("bank-memory-knowledge.js?v=20260816-1", "data-bank-memory-knowledge-loader");
+
         // 三层结构：往日题累计记忆 + 明日题提前1天预习 + 今日正式刷题。
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
 
         // 累计记忆不再全池等概率随机：按1/2/4/7/15/30天间隔，到期与逾期题优先加权抽取。
         await loadScriptOnce("memory-curve.js?v=20260816-1", "data-memory-curve-loader");
+
+        // 给预习卡和记忆曲线卡统一展示“知识点解析 / 易混辨析 / 记忆钩子”。
+        await loadScriptOnce("memory-knowledge-ui.js?v=20260816-1", "data-memory-knowledge-ui-loader");
 
         // 正确率只统计完整刷完的章节；章节复习支持断点续刷。
         await loadScriptOnce("study-session-rules.js?v=20260816-1", "data-study-session-rules-loader");
