@@ -31,7 +31,8 @@
     flex-wrap: wrap;
 }
 
-.daily-practice-title-row h2 {
+.daily-practice-title-row h2,
+.daily-memory-head h2 {
     margin: 0;
     color: #073f3a;
     font-size: 22px;
@@ -44,15 +45,31 @@
     font-weight: 700;
 }
 
-.daily-practice-copy p {
+.daily-practice-copy p,
+.daily-memory-head p {
     margin: 7px 0 10px;
     color: #6d7d7b;
     font-size: 13px;
     line-height: 1.55;
 }
 
+.daily-dual-progress {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    width: min(560px, 100%);
+}
+
+.daily-progress-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #6d7d7b;
+    font-size: 11px;
+    font-weight: 700;
+}
+
 .daily-practice-progress {
-    width: min(420px, 100%);
+    width: 100%;
     height: 7px;
     overflow: hidden;
     border-radius: 999px;
@@ -65,6 +82,17 @@
     border-radius: inherit;
     background: #007866;
     transition: width .2s ease;
+}
+
+.daily-memory-progress span {
+    background: #46a594;
+}
+
+.daily-practice-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 0 0 auto;
 }
 
 .daily-practice-button {
@@ -85,20 +113,287 @@
     background: #006457;
 }
 
+.daily-practice-button-secondary {
+    border: 1px solid rgba(0, 120, 102, .26);
+    background: #f3fbf9;
+    color: #006c5d;
+    box-shadow: none;
+}
+
+.daily-practice-button-secondary:hover:not(:disabled) {
+    background: #e4f5f1;
+}
+
 .daily-practice-button:disabled {
     cursor: default;
     background: #b9cfca;
     box-shadow: none;
 }
 
-@media (max-width: 720px) {
+.daily-memory-panel {
+    margin: 0 0 18px;
+    padding: 20px 22px 22px;
+    border: 1px solid #dfeae7;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 14px 34px rgba(18, 74, 67, .08);
+}
+
+.daily-memory-panel[hidden] {
+    display: none !important;
+}
+
+.daily-memory-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.daily-memory-close {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    padding: 0;
+    border: 1px solid #dfe7e5;
+    border-radius: 10px;
+    background: #f7faf9;
+    color: #5f706d;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.daily-memory-close:hover {
+    background: #edf5f3;
+}
+
+.daily-memory-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 6px 0 12px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    background: #f3f8f7;
+    color: #637370;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.daily-memory-card-inner {
+    padding: 20px;
+    border: 1px solid #e5ecea;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #ffffff, #fbfdfc);
+}
+
+.daily-memory-meta {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.daily-memory-meta span {
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #edf7f5;
+    color: #087665;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.daily-memory-card-inner h3 {
+    margin: 0;
+    color: #202b29;
+    font-size: 18px;
+    line-height: 1.75;
+    white-space: pre-line;
+}
+
+.daily-memory-options {
+    display: grid;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.daily-memory-option {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
+    padding: 9px 11px;
+    border: 1px solid #e9eeed;
+    border-radius: 10px;
+    background: #fbfcfc;
+}
+
+.daily-memory-option > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    background: #edf4f2;
+    color: #45615c;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.daily-memory-option p {
+    margin: 2px 0 0;
+    color: #3f4a48;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-line;
+}
+
+.daily-memory-answer {
+    margin-top: 17px;
+    padding: 14px 16px;
+    border: 1px solid rgba(0, 120, 102, .2);
+    border-radius: 12px;
+    background: #edf8f5;
+    color: #24443e;
+    line-height: 1.65;
+}
+
+.daily-memory-answer-label {
+    margin-bottom: 4px;
+    color: #007866;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .06em;
+}
+
+.daily-memory-answer strong {
+    display: block;
+    color: #005f52;
+    font-size: 15px;
+}
+
+.daily-memory-answer-hidden {
+    border-style: dashed;
+    background: #fafcfb;
+    color: #7a8885;
+    font-size: 13px;
+}
+
+.daily-memory-source-note {
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid rgba(0, 120, 102, .13);
+}
+
+.daily-memory-source-note p {
+    margin: 4px 0;
+    color: #536a65;
+    font-size: 12px;
+}
+
+.daily-memory-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.daily-memory-left-actions,
+.daily-memory-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.daily-memory-primary,
+.daily-memory-secondary {
+    min-height: 38px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.daily-memory-primary {
+    border: 1px solid #007866;
+    background: #007866;
+    color: #fff;
+}
+
+.daily-memory-primary:hover {
+    background: #006457;
+}
+
+.daily-memory-secondary {
+    border: 1px solid #d6e2df;
+    background: #fff;
+    color: #52635f;
+}
+
+.daily-memory-secondary:hover:not(:disabled) {
+    background: #f4f8f7;
+}
+
+.daily-memory-secondary:disabled {
+    cursor: default;
+    opacity: .42;
+}
+
+@media (max-width: 900px) {
     .daily-practice-card {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .daily-practice-actions {
+        width: 100%;
+    }
+
+    .daily-practice-actions .daily-practice-button {
+        flex: 1;
+    }
+}
+
+@media (max-width: 640px) {
+    .daily-practice-card {
         padding: 17px 18px;
     }
 
-    .daily-practice-button {
+    .daily-dual-progress {
+        grid-template-columns: 1fr;
+        gap: 9px;
+    }
+
+    .daily-practice-actions {
+        flex-direction: column;
+    }
+
+    .daily-practice-actions .daily-practice-button {
         width: 100%;
+    }
+
+    .daily-memory-panel {
+        padding: 16px;
+    }
+
+    .daily-memory-status,
+    .daily-memory-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .daily-memory-right-actions,
+    .daily-memory-left-actions {
+        width: 100%;
+    }
+
+    .daily-memory-primary,
+    .daily-memory-secondary {
+        flex: 1;
     }
 }
