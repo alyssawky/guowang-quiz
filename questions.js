@@ -12,12 +12,20 @@ const questions = [];
   "daily-practice.js?v=20260816-2"
 ].forEach(src => document.write(`<script src="${src}"><\/script>`));
 
-// 页面完成解析后再做一次国网必刷300题完整性检查。
-// 如果某一周脚本因缓存/加载异常没有注册，会自动强制补载。
+// 页面完成解析后再做一次国网必刷300题完整性检查，
+// 并执行一次性的测试答题历史清理。
 window.addEventListener("DOMContentLoaded", () => {
-    if (document.querySelector('script[data-question-bank-integrity]')) return;
-    const script = document.createElement("script");
-    script.src = `question-bank-integrity.js?v=20260816-1&ts=${Date.now()}`;
-    script.dataset.questionBankIntegrity = "true";
-    document.body.appendChild(script);
+    if (!document.querySelector('script[data-question-bank-integrity]')) {
+        const integrityScript = document.createElement("script");
+        integrityScript.src = `question-bank-integrity.js?v=20260816-1&ts=${Date.now()}`;
+        integrityScript.dataset.questionBankIntegrity = "true";
+        document.body.appendChild(integrityScript);
+    }
+
+    if (!document.querySelector('script[data-answer-history-reset]')) {
+        const resetScript = document.createElement("script");
+        resetScript.src = `reset-test-answer-history.js?v=20260816-1&ts=${Date.now()}`;
+        resetScript.dataset.answerHistoryReset = "true";
+        document.body.appendChild(resetScript);
+    }
 }, { once: true });
