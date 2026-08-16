@@ -97,6 +97,9 @@
         // 记忆型错题知识区（计算机/国网）采用紧凑结论清单；答案视觉突出，行测仍保留方法解析。
         await loadScriptOnce("weak-knowledge-memory-facts.js?v=20260816-2", "data-weak-memory-facts-loader");
 
+        // 大框架：行测→四板块；计算机→模块；国网必刷题→企业文化/战略/新型电力系统/品牌/形势政策→具体知识点。
+        await loadScriptOnce("weak-knowledge-hierarchy.js?v=20260817-1", "data-weak-knowledge-hierarchy-loader");
+
         refreshQuestionViews();
     }
 
