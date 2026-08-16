@@ -1,0 +1,31 @@
+/* 第二章后半段：文字材料 + 重绘图表 */
+.da-source-material {
+    margin-top: 16px;
+    padding: 16px 18px;
+    border: 1px solid #e2e5e9;
+    border-radius: 14px;
+    background: #fbfcfd;
+    color: #2f343b;
+    line-height: 1.85;
+}
+.da-source-material-label {
+    margin-bottom: 8px;
+    color: #667085;
+    font-size: 13px;
+    font-weight: 700;
+}
+.da-source-material-text { font-size: 15px; }
+.da-question-stem {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #f5f7fa;
+    color: #20242a;
+    font-size: 16px;
+    line-height: 1.7;
+}
+.da-question-stem strong { margin-right: 6px; }
+@media (max-width: 600px) {
+    .da-source-material { padding: 12px; }
+    .da-source-material-text, .da-question-stem { font-size: 14px; }
+}
