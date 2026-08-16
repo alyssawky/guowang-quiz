@@ -9,7 +9,7 @@ const questions = [];
   "questions-reasoning-attribution-2.js?v=20260816-1",
   "questions-reasoning-attribution-3.js?v=20260816-1",
   "questions-reasoning-attribution-4.js?v=20260816-1",
-  "daily-practice.js?v=20260816-2"
+  "daily-practice.js?v=20260816-4"
 ].forEach(src => document.write(`<script src="${src}"><\/script>`));
 
 // 页面完成解析后再做一次国网必刷300题完整性检查，
@@ -17,7 +17,7 @@ const questions = [];
 window.addEventListener("DOMContentLoaded", () => {
     if (!document.querySelector('script[data-question-bank-integrity]')) {
         const integrityScript = document.createElement("script");
-        integrityScript.src = `question-bank-integrity.js?v=20260816-1&ts=${Date.now()}`;
+        integrityScript.src = `question-bank-integrity.js?v=20260816-4&ts=${Date.now()}`;
         integrityScript.dataset.questionBankIntegrity = "true";
         document.body.appendChild(integrityScript);
     }
