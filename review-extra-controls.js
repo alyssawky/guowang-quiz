@@ -123,51 +123,39 @@
         });
     }
 
-    function wrapWithInventoryButton(startButton, questionList, title) {
-        if (!startButton || startButton.closest(".review-choice-actions")) return;
-
-        const wrapper = document.createElement("div");
-        wrapper.className = "review-choice-actions";
-        startButton.replaceWith(wrapper);
-        wrapper.appendChild(startButton);
-
-        const viewButton = document.createElement("button");
-        viewButton.type = "button";
-        viewButton.className = "view-all-questions-button";
-        viewButton.textContent = `查看全部题目（${questionList.length}）`;
-        viewButton.addEventListener("click", () => {
-            showQuestionInventory(questionList, title);
-        });
-        wrapper.appendChild(viewButton);
+    function bindInventoryButton(button, questionList, title) {
+        if (!button || button.dataset.inventoryBound === "1") return;
+        button.dataset.inventoryBound = "1";
+        button.addEventListener("click", () => showQuestionInventory(questionList, title));
     }
 
     function enhanceSectionChooser() {
         const chooser = document.getElementById("review-section-chooser");
         if (!chooser) return;
 
-        chooser.querySelectorAll("button[data-review-major-module]").forEach(startButton => {
-            const module = startButton.dataset.reviewMajorModule;
-            wrapWithInventoryButton(
-                startButton,
+        chooser.querySelectorAll("[data-view-major-module]").forEach(button => {
+            const module = button.dataset.viewMajorModule;
+            bindInventoryButton(
+                button,
                 getAllQuestionsForMajorModule("行测", module),
                 `题库核对 · ${module}`
             );
         });
 
-        chooser.querySelectorAll("button[data-review-task-id]").forEach(startButton => {
-            const taskId = startButton.dataset.reviewTaskId;
+        chooser.querySelectorAll("[data-view-task-id]").forEach(button => {
+            const taskId = button.dataset.viewTaskId;
             const task = studyPlan.find(item => item.id === taskId);
-            wrapWithInventoryButton(
-                startButton,
+            bindInventoryButton(
+                button,
                 getAllQuestionsForTaskId(taskId),
                 `题库核对 · ${task ? task.name : taskId}`
             );
         });
 
-        const bankAllButton = chooser.querySelector("button[data-review-question-bank-all]");
-        if (bankAllButton) {
-            wrapWithInventoryButton(
-                bankAllButton,
+        const bankButton = chooser.querySelector("[data-view-question-bank-all]");
+        if (bankButton) {
+            bindInventoryButton(
+                bankButton,
                 getAllQuestionBankQuestions(),
                 "题库核对 · 国网必刷题"
             );
