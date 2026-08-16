@@ -102,7 +102,9 @@
 
         // 一次性清掉此前用于测试界面的答题记录。
         await loadScriptOnce("reset-test-answer-history.js?v=20260816-1", "data-answer-history-reset-loader");
-        await loadScriptOnce("daily-practice.js?v=20260816-2", "data-daily-practice-loader");
+
+        // 每日必刷：提前记忆卡片 + 正式刷题双入口。
+        await loadScriptOnce("daily-practice.js?v=20260816-3", "data-daily-practice-loader");
 
         // 正确率只统计完整刷完的章节；章节复习支持断点续刷。
         await loadScriptOnce("study-session-rules.js?v=20260816-1", "data-study-session-rules-loader");
