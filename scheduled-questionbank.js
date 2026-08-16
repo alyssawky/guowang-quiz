@@ -8,12 +8,8 @@ function questionIsUnlocked(question) {
         return Boolean(progress[question.taskId]);
     }
 
-    // 题库型任务：如果整周任务已经完成，整组题均进入复习池。
-    if (progress[question.taskId]) {
-        return true;
-    }
-
-    // 否则严格按每一道题的计划日期自动解锁。
+    // 国网题库严格按“每一道题自己的计划日期”逐日解锁。
+    // 即使周任务在学习打卡里被标记为完成，也不会提前放出整周50题。
     if (question.unlockDate) {
         const unlockDate = parseLocalDate(question.unlockDate);
         return Boolean(unlockDate && unlockDate <= startOfDay());
