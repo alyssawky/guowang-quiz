@@ -95,7 +95,6 @@
 
         if (!answer) return stem;
 
-        // 常见括号填空：将空白括号直接替换为正确项，保留用户熟悉的“（答案）”记忆形式。
         const blankPatterns = [
             /（\s*[　_＿—-]*\s*）/,
             /\(\s*[　_＿—-]*\s*\)/
@@ -106,12 +105,10 @@
             }
         }
 
-        // 如果题干本身已经以“是/为/包括/组成”等知识句式结尾，直接补答案。
         if (/(是|为|包括|组成|指|称为|属于|不属于|体现为|具体体现在|内容包括|核心是|标志是|源头是)$/.test(stem)) {
             return `${stem}（${answer}）。`;
         }
 
-        // 判断题或无法自然填空的题：保持原题表述，同时直接给出正确判断/正确项。
         if (question.type === "judge") {
             return `${stem} —— （${answer}）。`;
         }
@@ -119,18 +116,38 @@
         return `${stem}（${answer}）。`;
     }
 
+    function memorySentenceHTML(question) {
+        const sentence = fillMemoryStem(question);
+        const answer = correctOptionText(question);
+        let html = escapeHTML(sentence);
+        if (!answer) return html;
+
+        const wrapped = `（${answer}）`;
+        const escapedWrapped = escapeHTML(wrapped);
+        if (html.includes(escapedWrapped)) {
+            html = html.replace(
+                escapedWrapped,
+                `<strong class="weak-memory-answer">${escapedWrapped}</strong>`
+            );
+        }
+        return html;
+    }
+
     function memoryFactHTML(question) {
         const record = answerHistory && answerHistory[question.id];
         const meta = [
             question.sourceId || "",
-            Number(record?.memoryBlurred || 0) ? `记忆模糊 ${Number(record.memoryBlurred)} 次` : "",
-            Number(record?.wrong || 0) > 1 ? `累计错 ${Number(record.wrong)} 次` : ""
+            Number(record?.memoryBlurred || 0) ? `模糊 ${Number(record.memoryBlurred)} 次` : "",
+            Number(record?.wrong || 0) > 1 ? `错 ${Number(record.wrong)} 次` : ""
         ].filter(Boolean).join(" · ");
 
         return `
             <div class="weak-memory-fact">
-                <p>${escapeHTML(fillMemoryStem(question))}</p>
-                ${meta ? `<small>${escapeHTML(meta)}</small>` : ""}
+                <span class="weak-memory-dot" aria-hidden="true"></span>
+                <div class="weak-memory-fact-main">
+                    <p>${memorySentenceHTML(question)}</p>
+                    ${meta ? `<small>${escapeHTML(meta)}</small>` : ""}
+                </div>
             </div>
         `;
     }
@@ -158,10 +175,11 @@
             );
             if (!list.length) return;
 
+            item.classList.add("weak-memory-group");
             body.classList.add("weak-memory-facts-body");
             body.innerHTML = `
-                <div class="weak-memory-facts-intro">直接记结论</div>
-                ${list.map(memoryFactHTML).join("")}
+                <div class="weak-memory-facts-intro">记忆清单</div>
+                <div class="weak-memory-facts-list">${list.map(memoryFactHTML).join("")}</div>
             `;
         });
     }
@@ -171,34 +189,100 @@
         const style = document.createElement("style");
         style.id = "weak-memory-facts-style";
         style.textContent = `
+            .weak-memory-group > summary {
+                padding-top: 11px !important;
+                padding-bottom: 11px !important;
+                background: #f6fbf9;
+                border-left: 3px solid #0b8073;
+            }
+            .weak-memory-group .weak-summary-main strong {
+                color: #0b5f55;
+                font-size: 15px;
+                font-weight: 850;
+            }
+            .weak-memory-group .weak-summary-main small {
+                color: #82908c;
+                font-size: 10.5px;
+            }
             .weak-memory-facts-body {
-                display: grid;
-                gap: 9px;
+                display: block !important;
+                padding: 8px 14px 10px !important;
             }
             .weak-memory-facts-intro {
-                color: #7a8783;
-                font-size: 11px;
-                font-weight: 800;
-                letter-spacing: .04em;
+                display: inline-flex;
+                align-items: center;
+                margin: 0 0 4px 2px;
+                padding: 2px 7px;
+                border-radius: 999px;
+                background: #edf7f4;
+                color: #39776e;
+                font-size: 10px;
+                font-weight: 750;
+                letter-spacing: .02em;
+            }
+            .weak-memory-facts-list {
+                border-top: 1px solid #e5eeeb;
             }
             .weak-memory-fact {
-                padding: 12px 14px;
-                border: 1px solid #e1ebe8;
-                border-radius: 11px;
-                background: #fbfefd;
+                display: flex;
+                align-items: flex-start;
+                gap: 9px;
+                padding: 8px 3px;
+                border: 0;
+                border-bottom: 1px solid #edf2f0;
+                border-radius: 0;
+                background: transparent;
+            }
+            .weak-memory-fact:last-child {
+                border-bottom: 0;
+            }
+            .weak-memory-dot {
+                width: 5px;
+                height: 5px;
+                margin-top: 8px;
+                border-radius: 50%;
+                background: #76aaa1;
+                flex: 0 0 auto;
+            }
+            .weak-memory-fact-main {
+                min-width: 0;
+                flex: 1;
             }
             .weak-memory-fact p {
                 margin: 0;
-                color: #203b35;
-                font-size: 14px;
-                font-weight: 650;
-                line-height: 1.75;
+                color: #31433f;
+                font-size: 13px;
+                font-weight: 500;
+                line-height: 1.55;
+            }
+            .weak-memory-answer {
+                display: inline;
+                padding: 1px 4px;
+                border-radius: 4px;
+                background: #e6f4f0;
+                color: #00695d;
+                font-weight: 850;
+                box-decoration-break: clone;
+                -webkit-box-decoration-break: clone;
             }
             .weak-memory-fact small {
                 display: block;
-                margin-top: 6px;
-                color: #909b98;
-                font-size: 10px;
+                margin-top: 3px;
+                color: #a0aaa7;
+                font-size: 9.5px;
+                line-height: 1.35;
+            }
+            @media (max-width: 680px) {
+                .weak-memory-facts-body {
+                    padding: 7px 10px 9px !important;
+                }
+                .weak-memory-fact {
+                    padding: 8px 1px;
+                }
+                .weak-memory-fact p {
+                    font-size: 12.5px;
+                    line-height: 1.55;
+                }
             }
         `;
         document.head.appendChild(style);
@@ -206,7 +290,6 @@
 
     installStyles();
 
-    // weak-knowledge-addon 已经包装了 renderWrongList；这里再在其完成后做一次轻量 DOM 整理。
     const baseRenderWrongList = window.renderWrongList;
     if (typeof baseRenderWrongList === "function") {
         window.renderWrongList = function (...args) {
