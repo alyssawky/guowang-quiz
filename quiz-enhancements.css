@@ -157,6 +157,13 @@
     background: #eef5ff;
 }
 
+/* 答题反馈中的推进按钮放在右下角，更符合下一步操作习惯。 */
+.answer-result > button {
+    display: block;
+    margin-top: 14px;
+    margin-left: auto;
+}
+
 /* 资料分析：网页原生高清图表/表格 */
 .da-native-visual {
     margin-top: 16px;
