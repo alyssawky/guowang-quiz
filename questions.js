@@ -8,16 +8,14 @@ const questions = [];
   "questions-reasoning-attribution-1.js?v=20260816-1",
   "questions-reasoning-attribution-2.js?v=20260816-1",
   "questions-reasoning-attribution-3.js?v=20260816-1",
-  "questions-reasoning-attribution-4.js?v=20260816-1",
-  "daily-practice.js?v=20260816-4"
+  "questions-reasoning-attribution-4.js?v=20260816-1"
 ].forEach(src => document.write(`<script src="${src}"><\/script>`));
 
-// 页面完成解析后再做一次国网必刷300题完整性检查，
-// 并执行一次性的测试答题历史清理。
+// 每日国网任务、知识解析、记忆曲线等必须等 app.js 初始化完 answerHistory / recordAnswer 后再加载。
 window.addEventListener("DOMContentLoaded", () => {
     if (!document.querySelector('script[data-question-bank-integrity]')) {
         const integrityScript = document.createElement("script");
-        integrityScript.src = `question-bank-integrity.js?v=20260816-4&ts=${Date.now()}`;
+        integrityScript.src = `question-bank-integrity.js?v=20260816-5&ts=${Date.now()}`;
         integrityScript.dataset.questionBankIntegrity = "true";
         document.body.appendChild(integrityScript);
     }
