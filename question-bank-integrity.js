@@ -58,7 +58,6 @@
         });
     }
 
-    // 只加载一次，不再删除已执行脚本后重复执行，避免多层事件包装/监听。
     function loadScriptOnce(src, dataAttr) {
         return new Promise(resolve => {
             const selector = `script[${dataAttr}]`;
@@ -86,31 +85,17 @@
         console.info("国网必刷题完整性检查", counts, `total=${Object.values(counts).reduce((a, b) => a + b, 0)}`);
 
         await loadScriptOnce("reset-test-answer-history.js?v=20260816-1", "data-answer-history-reset-loader");
-
-        // 知识解释层：基础概念 + 形势政策50题详细解析。
         await loadScriptOnce("bank-memory-knowledge.js?v=20260816-1", "data-bank-memory-knowledge-loader");
         await loadScriptOnce("bank-memory-policy-knowledge.js?v=20260816-1", "data-bank-memory-policy-loader");
-
-        // 今日正式刷题 + 明日提前1天预习。
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
-
-        // 累计旧题使用原生答题页做记忆曲线复习，不再渲染独立记忆卡。
         await loadScriptOnce("memory-curve.js?v=20260816-2", "data-memory-curve-loader");
-
-        // 明日预习的详细解析只在点击“显示答案”时注入；无 MutationObserver。
         await loadScriptOnce("preview-knowledge-click.js?v=20260816-1", "data-preview-knowledge-loader");
-
-        // 章节门槛与断点续刷。
         await loadScriptOnce("study-session-rules.js?v=20260816-1", "data-study-session-rules-loader");
-
-        // 曲线答题计入总体正确率；未完整章节的普通零散作答仍不计入。
         await loadScriptOnce("curve-accuracy-addon.js?v=20260816-1", "data-curve-accuracy-loader");
-
-        // 免费错题诊断：自动聚类薄弱知识点；计算机/国网题增加“记忆模糊”直接入错题本。
         await loadScriptOnce("weak-knowledge-addon.js?v=20260816-1", "data-weak-knowledge-addon-loader");
 
-        // 记忆型错题知识区（计算机/国网）只展示“题干 + 正确答案”的完整结论句；行测仍保留方法解析。
-        await loadScriptOnce("weak-knowledge-memory-facts.js?v=20260816-1", "data-weak-memory-facts-loader");
+        // 记忆型错题知识区（计算机/国网）采用紧凑结论清单；答案视觉突出，行测仍保留方法解析。
+        await loadScriptOnce("weak-knowledge-memory-facts.js?v=20260816-2", "data-weak-memory-facts-loader");
 
         refreshQuestionViews();
     }
