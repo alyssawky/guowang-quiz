@@ -109,6 +109,9 @@
         // 免费错题诊断：自动聚类薄弱知识点；计算机/国网题增加“记忆模糊”直接入错题本。
         await loadScriptOnce("weak-knowledge-addon.js?v=20260816-1", "data-weak-knowledge-addon-loader");
 
+        // 记忆型错题知识区（计算机/国网）只展示“题干 + 正确答案”的完整结论句；行测仍保留方法解析。
+        await loadScriptOnce("weak-knowledge-memory-facts.js?v=20260816-1", "data-weak-memory-facts-loader");
+
         refreshQuestionViews();
     }
 
