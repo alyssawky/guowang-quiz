@@ -1,6 +1,7 @@
-// 第二章后半段原题图修复：
-// da-ch2-010～043 不再使用 hq35 的低分辨率覆盖图，
-// 直接使用题库文件中保留的 900px 原题 sprite 裁切坐标。
+// 第二章后半段题图修复：
+// 1) q10～q43 优先使用题目自身的高清 image；
+// 2) 若当前题库仍是旧版，则退回原题 sprite 裁切；
+// 3) 禁止旧 hq35 异步覆盖层再次接管后半段题目。
 (function () {
     const previousRenderQuestionImage = window.renderQuestionImage;
 
@@ -15,6 +16,22 @@
             .replace(/"/g, "&quot;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;");
+    }
+
+    function renderDirectImage(question) {
+        if (!question || !question.image) return "";
+        return `
+            <div class="question-image-wrap question-image-wrap-late-ch2">
+                <img
+                    class="question-original-image question-original-image-late-ch2"
+                    src="${question.image}"
+                    alt="${escapeAttr(question.sourceId || question.question || "原题") }"
+                    loading="eager"
+                    decoding="async"
+                    style="display:block;width:min(100%,1000px);height:auto;margin:0 auto;image-rendering:auto;"
+                >
+            </div>
+        `;
     }
 
     function renderOriginalQuestionCrop(question) {
@@ -54,8 +71,11 @@
     }
 
     window.renderQuestionImage = function (question) {
-        if (isLateChapterTwoQuestion(question) && question.questionImage) {
-            return renderOriginalQuestionCrop(question);
+        if (isLateChapterTwoQuestion(question)) {
+            // 新版题库：每题自带高清完整题面，永远优先使用。
+            if (question.image) return renderDirectImage(question);
+            // 旧版题库：至少绕过 hq35 错位覆盖，直接用原 sprite 坐标。
+            if (question.questionImage) return renderOriginalQuestionCrop(question);
         }
 
         return typeof previousRenderQuestionImage === "function"
@@ -63,7 +83,6 @@
             : "";
     };
 
-    // 防止旧 hq35 的异步完成后再次把后半段题目换回低清图。
     if (window.DA_HQ_LAYOUT) {
         Object.keys(window.DA_HQ_LAYOUT).forEach(id => {
             const match = id.match(/^da-ch2-(\d{3})$/);
