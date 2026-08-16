@@ -106,6 +106,9 @@
         // 曲线答题计入总体正确率；未完整章节的普通零散作答仍不计入。
         await loadScriptOnce("curve-accuracy-addon.js?v=20260816-1", "data-curve-accuracy-loader");
 
+        // 免费错题诊断：自动聚类薄弱知识点；计算机/国网题增加“记忆模糊”直接入错题本。
+        await loadScriptOnce("weak-knowledge-addon.js?v=20260816-1", "data-weak-knowledge-addon-loader");
+
         refreshQuestionViews();
     }
 
