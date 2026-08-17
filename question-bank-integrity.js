@@ -87,6 +87,10 @@
         await loadScriptOnce("reset-test-answer-history.js?v=20260816-1", "data-answer-history-reset-loader");
         await loadScriptOnce("bank-memory-knowledge.js?v=20260816-1", "data-bank-memory-knowledge-loader");
         await loadScriptOnce("bank-memory-policy-knowledge.js?v=20260816-1", "data-bank-memory-policy-loader");
+
+        // 史实类国网题补充“时代背景→为什么发生→前后节点→记忆钩子”，避免只背年份/工程名。
+        await loadScriptOnce("bank-history-context.js?v=20260817-1", "data-bank-history-context-loader");
+
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
 
         // 每日8/9题整组完成后，当天立即进入累计旧题池；首次曲线复习仍按+1天到期。
