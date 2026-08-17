@@ -1,7 +1,8 @@
 // 国网累计记忆：按记忆曲线选题，但使用网站原生答题模式。
 // 曲线复习会正常记录答题历史、错题和正确率；明日预习仍由 daily-practice.js 的卡片负责。
+// 每日国网8/9题整组完成后，当天立即进入累计旧题池；首次曲线到期仍为正式学习后的+1天。
 (function () {
-    const VERSION = 2;
+    const VERSION = 3;
     if (Number(window.__memoryCurveVersion || 0) >= VERSION) return;
     window.__memoryCurveVersion = VERSION;
 
@@ -75,10 +76,33 @@
         return Boolean(record && Number(record.attempts || 0) > 0);
     }
 
+    function dailyGroup(dateString) {
+        return questions.filter(question =>
+            isBankQuestion(question) && question.unlockDate === dateString
+        );
+    }
+
+    function dailyGroupCompleted(dateString) {
+        const today = toLocalISO();
+        if (!dateString || dateString > today) return false;
+        const group = dailyGroup(dateString);
+        return Boolean(group.length && group.every(formallyAnswered));
+    }
+
     function learnedPool() {
         const today = toLocalISO();
+        const completedDates = new Set(
+            [...new Set(
+                questions
+                    .filter(question => isBankQuestion(question) && question.unlockDate <= today)
+                    .map(question => question.unlockDate)
+            )].filter(dailyGroupCompleted)
+        );
+
         return questions.filter(question =>
-            isBankQuestion(question) && question.unlockDate < today && formallyAnswered(question)
+            isBankQuestion(question) &&
+            completedDates.has(question.unlockDate) &&
+            formallyAnswered(question)
         );
     }
 
@@ -211,11 +235,11 @@
             ? "暂无累计旧题"
             : summary.due
                 ? `曲线答题 · 到期${summary.due}题`
-                : "曲线答题 · 巩固旧题";
+                : `曲线答题 · 累计${summary.total}题`;
         button.textContent = text;
         button.disabled = !summary.total;
         button.title = summary.total
-            ? `累计已正式学习 ${summary.total} 题；每轮最多 ${Math.min(SESSION_LIMIT, summary.total)} 题，到期和逾期题优先。`
+            ? `累计已完整刷过 ${summary.total} 题；每轮最多 ${Math.min(SESSION_LIMIT, summary.total)} 题，到期和逾期题优先。当天完成的8/9题会立即进入累计池。`
             : "";
     }
 
@@ -228,7 +252,7 @@
         window.__memoryCurveQuizQuestionIds = new Set(session.map(question => question.id));
 
         const summary = poolSummary();
-        const sequenceText = `记忆曲线：1→2→4→7→15→30天 · 本轮${session.length}题 · 到期${summary.due}题${summary.overdue ? ` · 其中逾期${summary.overdue}题` : ""}`;
+        const sequenceText = `记忆曲线：1→2→4→7→15→30天 · 本轮${session.length}题 · 累计池${summary.total}题 · 到期${summary.due}题${summary.overdue ? ` · 其中逾期${summary.overdue}题` : ""}`;
         startQuestionSession(session, "国网必刷题 · 记忆曲线答题", sequenceText);
 
         const chooser = document.getElementById("review-section-chooser");
@@ -237,8 +261,8 @@
 
     // 任意新答题会话都会更新“是否为曲线答题”状态。
     const baseStartQuestionSession = window.startQuestionSession;
-    if (typeof baseStartQuestionSession === "function" && !window.__memoryCurveStartWrappedV2) {
-        window.__memoryCurveStartWrappedV2 = true;
+    if (typeof baseStartQuestionSession === "function" && !window.__memoryCurveStartWrappedV3) {
+        window.__memoryCurveStartWrappedV3 = true;
         window.startQuestionSession = function (list, title, sequenceText) {
             const isCurve = String(title || "").includes("记忆曲线答题");
             window.__memoryCurveQuizActive = isCurve;
@@ -248,8 +272,8 @@
     }
 
     const baseRecordAnswer = window.recordAnswer;
-    if (typeof baseRecordAnswer === "function" && !window.__memoryCurveRecordWrappedV2) {
-        window.__memoryCurveRecordWrappedV2 = true;
+    if (typeof baseRecordAnswer === "function" && !window.__memoryCurveRecordWrappedV3) {
+        window.__memoryCurveRecordWrappedV3 = true;
         window.recordAnswer = function (questionId, isCorrect, ...rest) {
             const result = baseRecordAnswer.call(this, questionId, isCorrect, ...rest);
             const question = getQuestion(questionId);
@@ -261,6 +285,7 @@
                 );
                 advanceSchedule(questionId, Boolean(isCorrect), isCurve ? "curve" : "formal");
                 if (isCurve) recordCurveAttempt(questionId, Boolean(isCorrect));
+                // 当天最后一题完成后，dailyGroupCompleted 会立刻变为 true，按钮随即显示新的累计数量。
                 setTimeout(patchButton, 0);
             }
             return result;
