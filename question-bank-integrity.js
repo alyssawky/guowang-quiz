@@ -91,7 +91,10 @@
         await loadScriptOnce("memory-curve.js?v=20260816-2", "data-memory-curve-loader");
         await loadScriptOnce("preview-knowledge-click.js?v=20260816-1", "data-preview-knowledge-loader");
         await loadScriptOnce("study-session-rules.js?v=20260816-1", "data-study-session-rules-loader");
-        await loadScriptOnce("curve-accuracy-addon.js?v=20260816-1", "data-curve-accuracy-loader");
+
+        // 正确率：普通章节仍需完整；国网必刷题改为“当天8/9题整组完成即计入”；曲线答题继续计入并自动去重。
+        await loadScriptOnce("curve-accuracy-addon.js?v=20260817-2", "data-curve-accuracy-loader");
+
         await loadScriptOnce("weak-knowledge-addon.js?v=20260816-1", "data-weak-knowledge-addon-loader");
 
         // “记忆模糊”成功写入错题后，显示几秒自动消失的确认提示。
