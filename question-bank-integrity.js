@@ -88,7 +88,10 @@
         await loadScriptOnce("bank-memory-knowledge.js?v=20260816-1", "data-bank-memory-knowledge-loader");
         await loadScriptOnce("bank-memory-policy-knowledge.js?v=20260816-1", "data-bank-memory-policy-loader");
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
-        await loadScriptOnce("memory-curve.js?v=20260816-2", "data-memory-curve-loader");
+
+        // 每日8/9题整组完成后，当天立即进入累计旧题池；首次曲线复习仍按+1天到期。
+        await loadScriptOnce("memory-curve.js?v=20260817-3", "data-memory-curve-loader");
+
         await loadScriptOnce("preview-knowledge-click.js?v=20260816-1", "data-preview-knowledge-loader");
         await loadScriptOnce("study-session-rules.js?v=20260816-1", "data-study-session-rules-loader");
 
