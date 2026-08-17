@@ -91,6 +91,9 @@
         // 史实类国网题补充“时代背景→为什么发生→前后节点→记忆钩子”，避免只背年份/工程名。
         await loadScriptOnce("bank-history-context.js?v=20260817-1", "data-bank-history-context-loader");
 
+        // 全量史实识别：其余年份/首个/投运/改革标志/重大工程题也统一切换为背景串联式解析。
+        await loadScriptOnce("bank-history-context-expanded.js?v=20260817-1", "data-bank-history-context-expanded-loader");
+
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
 
         // 每日8/9题整组完成后，当天立即进入累计旧题池；首次曲线复习仍按+1天到期。
