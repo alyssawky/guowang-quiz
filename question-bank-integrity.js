@@ -94,6 +94,9 @@
         await loadScriptOnce("curve-accuracy-addon.js?v=20260816-1", "data-curve-accuracy-loader");
         await loadScriptOnce("weak-knowledge-addon.js?v=20260816-1", "data-weak-knowledge-addon-loader");
 
+        // “记忆模糊”成功写入错题后，显示几秒自动消失的确认提示。
+        await loadScriptOnce("memory-blur-toast.js?v=20260817-1", "data-memory-blur-toast-loader");
+
         // 记忆型错题知识区（计算机/国网）采用紧凑结论清单；答案视觉突出，行测仍保留方法解析。
         await loadScriptOnce("weak-knowledge-memory-facts.js?v=20260816-2", "data-weak-memory-facts-loader");
 
