@@ -80,7 +80,6 @@
 
         if (hideTimer) window.clearTimeout(hideTimer);
         toast.classList.remove("is-visible");
-        // 强制一次重排，保证连续点击时入场动画仍然可见。
         void toast.offsetWidth;
         toast.classList.add("is-visible");
 
@@ -111,4 +110,13 @@
     };
 
     window.showMemoryBlurToast = showMemoryBlurToast;
+})();
+
+// 稳定加载首页累计池同步补丁：让“累计记忆”显示与 memory-curve.js 的真实答题池完全一致。
+(function () {
+    if (document.querySelector('script[data-daily-curve-pool-sync-loader]')) return;
+    const script = document.createElement('script');
+    script.src = `daily-curve-pool-sync.js?v=20260817-1&reload=${Date.now()}`;
+    script.setAttribute('data-daily-curve-pool-sync-loader', 'true');
+    document.body.appendChild(script);
 })();
