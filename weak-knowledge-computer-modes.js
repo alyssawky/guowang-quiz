@@ -28,13 +28,21 @@
     if (q.computerReviewMode === "method") return true;
     if (q.computerReviewMode === "memory") return false;
     const topic = n(q.topic);
-    const text = `${n(q.question)} ${topic} ${strip(q.explanation)}`;
-    if (/^2-(1|2|3|4|5|6|7|8)\b/.test(topic)) return true;
-    if (/区位码|国标码|机内码/.test(text) && /已知|转换|则其|求/.test(text)) return true;
-    if (/点阵|字模|字库/.test(text) && /字节|占用|存储/.test(text)) return true;
-    if (/奇校验|偶校验|CRC|循环冗余|海明/.test(text) && /适合|纠正|检错|一批数据|数据块|数据帧/.test(text)) return true;
-    if (/转换|计算|结果|真值|补码|反码|原码|移码|规格化|溢出|清\s*0|置\s*1|逻辑或|逻辑与|异或|表示范围|字长|等式.*成立/.test(text)) return true;
-    if (/适合于|适用于|用于.*的是|可以用来|应采用|可采用/.test(n(q.question))) return true;
+    const question = n(q.question);
+
+    // 真正需要“做步骤”的题才进入方法区；定义、标准、名称、分类默认留在纯记忆。
+    if (/转换|换算|计算|结果|真值|规格化|溢出|清\s*0|置\s*1|逻辑加|逻辑或运算|执行下列|等式.*成立|表示范围|能用.*位.*表示/.test(question)) return true;
+    if (/属于非法数字|非法数字|最小的数/.test(question)) return true;
+    if (/补码是|补码格式为|的补码|已知.*补码/.test(question)) return true;
+    if (/已知.*(区位码|国标码|机内码)|(?:区位码|国标码|机内码).*则其/.test(question)) return true;
+    if (/点阵|字模|字库/.test(question) && /字节|占用|存储/.test(question)) return true;
+    if (/哪种BCD编码是有权|有权编码/.test(question)) return true;
+    if (/适合于|适用于|应采用|可采用|一批数据/.test(question)) return true;
+
+    // 逻辑运算中只有涉及逐位运算或掩码功能的题属于方法题。
+    if (/某些位清|某些位置\s*1|10101010|按位|异或/.test(question)) return true;
+
+    // 可人工覆盖未来新增题：computerReviewMode = "method" / "memory"。
     return false;
   }
   window.isComputerMethodQuestion = isMethod;
