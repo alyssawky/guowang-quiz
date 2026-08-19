@@ -1,69 +1,13 @@
-// 2026旧版题库：10月最新版发布前必学300题周计划
-studyPlan.push(
-{
-    "id": "preoct300-w1",
-    "category": "国网题库",
-    "module": "10月前必学300题",
-    "name": "必学50题：企业文化35 + 形势政策15",
-    "week": "Week 1",
-    "startDate": "2026-08-17",
-    "endDate": "2026-08-23",
-    "defaultCompleted": false,
-    "questionBank": true
-},
-{
-    "id": "preoct300-w2",
-    "category": "国网题库",
-    "module": "10月前必学300题",
-    "name": "必学50题：企业文化35 + 形势政策15",
-    "week": "Week 2",
-    "startDate": "2026-08-24",
-    "endDate": "2026-08-30",
-    "defaultCompleted": false,
-    "questionBank": true
-},
-{
-    "id": "preoct300-w3",
-    "category": "国网题库",
-    "module": "10月前必学300题",
-    "name": "必学50题：公司战略核心",
-    "week": "Week 3",
-    "startDate": "2026-08-31",
-    "endDate": "2026-09-06",
-    "defaultCompleted": false,
-    "questionBank": true
-},
-{
-    "id": "preoct300-w4",
-    "category": "国网题库",
-    "module": "10月前必学300题",
-    "name": "必学50题：公司战略15 + 新型电力系统35",
-    "week": "Week 4",
-    "startDate": "2026-09-07",
-    "endDate": "2026-09-13",
-    "defaultCompleted": false,
-    "questionBank": true
-},
-{
-    "id": "preoct300-w5",
-    "category": "国网题库",
-    "module": "10月前必学300题",
-    "name": "必学50题：新型电力系统核心",
-    "week": "Week 5",
-    "startDate": "2026-09-14",
-    "endDate": "2026-09-20",
-    "defaultCompleted": false,
-    "questionBank": true
-},
-{
-    "id": "preoct300-w6",
-    "category": "国网题库",
-    "module": "10月前必学300题",
-    "name": "必学50题：新型电力系统5 + 品牌建设25 + 形势政策20",
-    "week": "Week 6",
-    "startDate": "2026-09-21",
-    "endDate": "2026-09-27",
-    "defaultCompleted": false,
-    "questionBank": true
+// 最新计划同步：2026-08-19
+// 来源：04_计算机打卡（按章节顺序修正版） + 05_国网题库与时政
+// 行测继续使用 plan.js 中现有53个单元（与最新版Excel一致）。
+// 这里覆盖旧计算机拆分，并补齐国网 Week 7 至 11月30 的完整阶段计划。
+
+for (let i = studyPlan.length - 1; i >= 0; i--) {
+    if (studyPlan[i].category === "计算机" || studyPlan[i].category === "国网题库") {
+        studyPlan.splice(i, 1);
+    }
 }
-);
+
+studyPlan.push(...[{"id":"computer-001","category":"计算机","module":"第一章｜概述","name":"第一章按顺序完成：1-1 → 1-7；重点1-4，1-1~1-3快速听，1-5~1-7低优先","week":"启动期+Week 1","startDate":"2026-08-14","endDate":"2026-08-23","defaultCompleted":false},{"id":"computer-002","category":"计算机","module":"第二章｜数据的表示与运算","name":"第二章完整顺序学习：2-1 → 2-12","week":"Week 2","startDate":"2026-08-24","endDate":"2026-08-30","defaultCompleted":false},{"id":"computer-003","category":"计算机","module":"第三章｜计算机硬件","name":"第三章按顺序学习：3-1 → 3-11；以3-1~3-7为主","week":"Week 3","startDate":"2026-08-31","endDate":"2026-09-06","defaultCompleted":false},{"id":"computer-004","category":"计算机","module":"第四章｜计算机软件","name":"第四章按顺序学习：4-1 → 4-8；重点4-1~4-5","week":"Week 4","startDate":"2026-09-07","endDate":"2026-09-13","defaultCompleted":false},{"id":"computer-005","category":"计算机","module":"第五章｜操作系统","name":"第五章按顺序学习：5-1 → 5-11","week":"Week 5","startDate":"2026-09-14","endDate":"2026-09-20","defaultCompleted":false},{"id":"computer-006","category":"计算机","module":"第六章｜程序设计语言","name":"第六章按顺序学习：6-1 → 6-7","week":"Week 6","startDate":"2026-09-21","endDate":"2026-09-27","defaultCompleted":false},{"id":"computer-007","category":"计算机","module":"第六章后补充","name":"章后查漏：编译/解释、源程序/目标程序/可执行程序、软件工程术语","week":"Week 6","startDate":"2026-09-26","endDate":"2026-09-27","defaultCompleted":false},{"id":"computer-008","category":"计算机","module":"第九章｜计算机网络（上）","name":"第九章上半章：9-1 → 9-6","week":"Week 7","startDate":"2026-09-28","endDate":"2026-10-04","defaultCompleted":false},{"id":"computer-009","category":"计算机","module":"第九章｜计算机网络（下）","name":"第九章下半章：9-7 → 9-11 + 本章测验","week":"Week 8","startDate":"2026-10-05","endDate":"2026-10-11","defaultCompleted":false},{"id":"computer-010","category":"计算机","module":"第十章｜信息安全","name":"第十章完整学习：10-1 → 10-5 + 本章测验","week":"Week 9","startDate":"2026-10-12","endDate":"2026-10-18","defaultCompleted":false},{"id":"computer-011","category":"计算机","module":"第十章后补充","name":"章后查漏：认证、访问控制、数据安全、备份、信息安全相关法规","week":"Week 9","startDate":"2026-10-17","endDate":"2026-10-18","defaultCompleted":false},{"id":"computer-012","category":"计算机","module":"第十一章｜IT前沿技术","name":"第十一章完整学习：11-1 → 11-7 + 本章测验","week":"Week 10","startDate":"2026-10-19","endDate":"2026-10-25","defaultCompleted":false},{"id":"computer-013","category":"计算机","module":"第十一章后补充","name":"章后查漏：生成式AI/大模型、数据-算法-算力、CPU/GPU/NPU、AI伦理","week":"Week 10","startDate":"2026-10-24","endDate":"2026-10-25","defaultCompleted":false},{"id":"computer-014","category":"计算机","module":"第一轮章级复盘","name":"按章复盘：第1→2→3→4→5→6→9→10→11章；整理各章错题","week":"Week 11","startDate":"2026-10-26","endDate":"2026-11-01","defaultCompleted":false},{"id":"computer-015","category":"计算机","module":"五模块知识树","name":"把各章映射回国网五模块：硬件 / 软件 / 网络 / 安全 / 前沿","week":"Week 12","startDate":"2026-11-02","endDate":"2026-11-08","defaultCompleted":false},{"id":"computer-016","category":"计算机","module":"考纲查漏","name":"对照2027新版（若已发布）/现行国网考纲逐项检查遗漏","week":"Week 13","startDate":"2026-11-09","endDate":"2026-11-15","defaultCompleted":false},{"id":"computer-017","category":"计算机","module":"样题训练","name":"NCRE相关理论样题第一轮：仅做国网范围内题目","week":"Week 14","startDate":"2026-11-16","endDate":"2026-11-22","defaultCompleted":false},{"id":"computer-018","category":"计算机","module":"样题二刷","name":"相关样题二做 + 动态题库错题二刷；目标正确率75%–80%+","week":"Week 15","startDate":"2026-11-23","endDate":"2026-11-29","defaultCompleted":false},{"id":"computer-019","category":"计算机","module":"验收","name":"计算机第一轮验收：相关章节无首次听说概念；形成12月二轮薄弱清单","week":"验收日","startDate":"2026-11-30","endDate":"2026-11-30","defaultCompleted":false}]);
+studyPlan.push(...[{"id":"preoct300-w1","category":"国网题库","module":"10月前必学300题","name":"企业文化35题 + 形势政策15题","week":"Week 1","startDate":"2026-08-17","endDate":"2026-08-23","defaultCompleted":false,"questionBank":true},{"id":"preoct300-w2","category":"国网题库","module":"10月前必学300题","name":"企业文化35题 + 形势政策15题","week":"Week 2","startDate":"2026-08-24","endDate":"2026-08-30","defaultCompleted":false,"questionBank":true},{"id":"preoct300-w3","category":"国网题库","module":"10月前必学300题","name":"公司战略核心50题","week":"Week 3","startDate":"2026-08-31","endDate":"2026-09-06","defaultCompleted":false,"questionBank":true},{"id":"preoct300-w4","category":"国网题库","module":"10月前必学300题","name":"公司战略15题 + 新型电力系统35题","week":"Week 4","startDate":"2026-09-07","endDate":"2026-09-13","defaultCompleted":false,"questionBank":true},{"id":"preoct300-w5","category":"国网题库","module":"10月前必学300题","name":"新型电力系统50题","week":"Week 5","startDate":"2026-09-14","endDate":"2026-09-20","defaultCompleted":false,"questionBank":true},{"id":"preoct300-w6","category":"国网题库","module":"10月前必学300题","name":"新型电力系统5 + 品牌建设25 + 形势政策20","week":"Week 6","startDate":"2026-09-21","endDate":"2026-09-27","defaultCompleted":false,"questionBank":true},{"id":"stategrid-007","category":"国网题库","module":"300题复盘","name":"只做错题/犹豫题；不加新题","week":"Week 7","startDate":"2026-09-28","endDate":"2026-10-04","defaultCompleted":false},{"id":"stategrid-008","category":"国网题库","module":"新版切换","name":"2026→2027考纲差异","week":"10月新版发布后","startDate":"2026-10-05","endDate":"2026-10-18","defaultCompleted":false},{"id":"stategrid-009","category":"国网题库","module":"新版切换","name":"2026→2027题库差异","week":"10月新版发布后","startDate":"2026-10-05","endDate":"2026-10-25","defaultCompleted":false},{"id":"stategrid-010","category":"国网题库","module":"2027题库一轮","name":"形势政策 + 企业文化","week":"10月下旬","startDate":"2026-10-19","endDate":"2026-10-31","defaultCompleted":false},{"id":"stategrid-011","category":"国网题库","module":"2027题库一轮","name":"公司战略","week":"10月下旬—11月","startDate":"2026-10-26","endDate":"2026-11-08","defaultCompleted":false},{"id":"stategrid-012","category":"国网题库","module":"2027题库一轮","name":"新型电力系统","week":"11月","startDate":"2026-11-02","endDate":"2026-11-22","defaultCompleted":false},{"id":"stategrid-013","category":"国网题库","module":"2027题库一轮","name":"品牌建设/其他新增板块","week":"11月","startDate":"2026-11-09","endDate":"2026-11-22","defaultCompleted":false},{"id":"stategrid-014","category":"国网题库","module":"时政 + 错题","name":"新版时政范围 + △/×题","week":"11月","startDate":"2026-11-09","endDate":"2026-11-29","defaultCompleted":false},{"id":"stategrid-015","category":"国网题库","module":"验收","name":"新版题库第一轮完成度检查","week":"11月30","startDate":"2026-11-30","endDate":"2026-11-30","defaultCompleted":false}]);
