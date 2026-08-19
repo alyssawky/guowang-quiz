@@ -110,7 +110,7 @@
         // “记忆模糊”成功写入错题后，显示几秒自动消失的确认提示。
         await loadScriptOnce("memory-blur-toast.js?v=20260817-1", "data-memory-blur-toast-loader");
 
-        // 记忆型错题知识区（计算机/国网）采用紧凑结论清单；行测不进入记忆模式。
+        // 原有记忆型错题清单；计算机后续会再按“纯记忆 / 方法理解”重新分流。
         await loadScriptOnce("weak-knowledge-memory-facts.js?v=20260816-2", "data-weak-memory-facts-loader");
 
         // 大框架：行测→四板块；计算机→模块；国网必刷题→企业文化/战略/新型电力系统/品牌/形势政策→具体知识点。
@@ -118,6 +118,9 @@
 
         // 行测错题单独按“具体题型→识别信号→同类题通法→本题套用”复盘，不生成记忆钩子。
         await loadScriptOnce("weak-knowledge-xingce-methods.js?v=20260819-1", "data-weak-xingce-methods-loader");
+
+        // 计算机错题分成两类：纯记忆直接记结论；方法理解按题型识别→步骤→本题套用→易错点复盘。
+        await loadScriptOnce("weak-knowledge-computer-modes.js?v=20260820-1", "data-weak-computer-modes-loader");
 
         // 所有层级默认闭合：进入错题知识点复习区后，由用户逐级点击展开。
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
