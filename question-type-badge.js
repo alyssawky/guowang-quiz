@@ -1,4 +1,4 @@
-// 刷题题型提示：把单选/多选从弱 metadata 升级为题干前的醒目标识。
+// 刷题题型提示：只保留“单选题 / 多选题”醒目标识，并使用网站统一的黑灰色系。
 (function () {
     if (window.__questionTypeBadgeInstalled) return;
     window.__questionTypeBadgeInstalled = true;
@@ -10,17 +10,10 @@
     }
 
     function typeInfo(question) {
-        if (!question) return null;
-        if (question.type === "short") {
-            return { key: "short", label: "填空题", hint: "请输入答案" };
-        }
-        if (question.type === "judge") {
-            return { key: "judge", label: "判断题", hint: "请选择正确或错误" };
-        }
-        if (isMultiple(question)) {
-            return { key: "multiple", label: "多选题", hint: "可选择多个选项" };
-        }
-        return { key: "single", label: "单选题", hint: "请选择 1 项" };
+        if (!question || question.type === "short" || question.type === "judge") return null;
+        return isMultiple(question)
+            ? { key: "multiple", label: "多选题" }
+            : { key: "single", label: "单选题" };
     }
 
     function decorate() {
@@ -32,9 +25,9 @@
         const card = document.querySelector("#quiz-area .quiz-question-card");
         if (!card) return;
 
-        // 原 metadata 里的题型文字不再重复显示。
+        // 单选/多选改由题干前的独立标签显示，metadata 中不重复。
         card.querySelectorAll(".question-meta span").forEach(node => {
-            if (/^(单选题|多选题|判断题|填空题)$/.test((node.textContent || "").trim())) {
+            if (/^(单选题|多选题)$/.test((node.textContent || "").trim())) {
                 node.classList.add("question-type-meta-hidden");
             }
         });
@@ -47,11 +40,8 @@
         const banner = document.createElement("div");
         banner.className = `question-type-banner question-type-${info.key}`;
         banner.setAttribute("role", "note");
-        banner.setAttribute("aria-label", `${info.label}，${info.hint}`);
-        banner.innerHTML = `
-            <span class="question-type-label">${info.label}</span>
-            <span class="question-type-hint">${info.hint}</span>
-        `;
+        banner.setAttribute("aria-label", info.label);
+        banner.innerHTML = `<span class="question-type-label">${info.label}</span>`;
 
         const progress = card.querySelector(".question-progress");
         if (progress) {
@@ -71,14 +61,16 @@
                 display: none !important;
             }
 
+            /* 原多选解释文字不再显示，避免在答题时形成额外视觉干扰。 */
+            .multiple-tip {
+                display: none !important;
+            }
+
             .question-type-banner {
                 display: inline-flex;
                 align-items: center;
-                gap: 10px;
-                margin: 2px 0 14px;
-                padding: 7px 11px 7px 8px;
-                border: 1px solid transparent;
-                border-radius: 10px;
+                width: fit-content;
+                margin: 2px 0 13px;
                 line-height: 1;
             }
 
@@ -87,75 +79,35 @@
                 align-items: center;
                 min-height: 27px;
                 padding: 0 10px;
+                border: 1px solid #dedee2;
                 border-radius: 7px;
-                font-size: 14px;
-                font-weight: 850;
+                font-size: 13px;
+                font-weight: 750;
                 letter-spacing: .02em;
             }
 
-            .question-type-hint {
-                font-size: 12px;
-                font-weight: 650;
-            }
-
-            .question-type-single {
-                background: #eef6ff;
-                border-color: #cddff2;
-                color: #315d87;
-            }
+            /* 单选：沿用网站浅灰状态标签。 */
             .question-type-single .question-type-label {
-                background: #dcecff;
-                color: #174f83;
+                background: #f0f0f2;
+                border-color: #e2e2e5;
+                color: #5f6065;
             }
 
-            .question-type-multiple {
-                background: #fff2e8;
-                border-color: #f0c8aa;
-                color: #8a4c1f;
-            }
+            /* 多选：沿用网站主按钮的深色系，明显但不跳脱。 */
             .question-type-multiple .question-type-label {
-                background: #ffd9bd;
-                color: #7a3510;
-            }
-
-            .question-type-judge {
-                background: #f2f0fb;
-                border-color: #d8d2eb;
-                color: #5c4d82;
-            }
-            .question-type-judge .question-type-label {
-                background: #e4dff5;
-                color: #4d3d78;
-            }
-
-            .question-type-short {
-                background: #eef8f2;
-                border-color: #cee4d5;
-                color: #37694a;
-            }
-            .question-type-short .question-type-label {
-                background: #dcefe3;
-                color: #285c3b;
-            }
-
-            /* 多选题原来的普通文字提示保留功能但降低重复感。 */
-            .question-type-multiple ~ .multiple-tip {
-                margin-top: 8px;
+                background: #1d1d1f;
+                border-color: #1d1d1f;
+                color: #ffffff;
             }
 
             @media (max-width: 600px) {
                 .question-type-banner {
-                    display: flex;
-                    width: fit-content;
-                    max-width: 100%;
-                    gap: 8px;
                     margin-bottom: 12px;
                 }
                 .question-type-label {
-                    font-size: 13px;
-                }
-                .question-type-hint {
-                    font-size: 11.5px;
+                    min-height: 26px;
+                    padding: 0 9px;
+                    font-size: 12.5px;
                 }
             }
         `;
