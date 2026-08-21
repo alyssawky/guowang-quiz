@@ -122,6 +122,9 @@
         // 计算机错题分成两类：纯记忆直接记结论；方法理解按题型识别→步骤→本题套用→易错点复盘。
         await loadScriptOnce("weak-knowledge-computer-modes.js?v=20260820-1", "data-weak-computer-modes-loader");
 
+        // 计算机学习任务展示：章节标题单独一行，小节目录以更小字号显示在下一行，避免长标题被截断。
+        await loadScriptOnce("computer-task-display.js?v=20260821-1", "data-computer-task-display-loader");
+
         // 所有层级默认闭合：进入错题知识点复习区后，由用户逐级点击展开。
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
 
