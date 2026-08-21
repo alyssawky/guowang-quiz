@@ -125,6 +125,9 @@
         // 计算机学习任务展示：章节标题单独一行，小节目录以更小字号显示在下一行，避免长标题被截断。
         await loadScriptOnce("computer-task-display.js?v=20260821-1", "data-computer-task-display-loader");
 
+        // 刷题题型提示：把“单选/多选”从灰色小标签升级为题干前醒目标识。
+        await loadScriptOnce("question-type-badge.js?v=20260821-1", "data-question-type-badge-loader");
+
         // 所有层级默认闭合：进入错题知识点复习区后，由用户逐级点击展开。
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
 
