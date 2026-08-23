@@ -48,13 +48,17 @@
         ids.forEach(id => dateBySourceId.set(`2026-Q${id}`, date));
     });
 
+    const bankQuestions = (typeof questions !== "undefined" && Array.isArray(questions))
+        ? questions
+        : [];
+
     let matched = 0;
     const missing = [];
 
     dateBySourceId.forEach((date, sourceId) => {
-        const question = Array.isArray(window.questions)
-            ? window.questions.find(item => item.sourceId === sourceId && String(item.taskId || "").startsWith("preoct300-w"))
-            : null;
+        const question = bankQuestions.find(item =>
+            item.sourceId === sourceId && String(item.taskId || "").startsWith("preoct300-w")
+        );
         if (!question) {
             missing.push(sourceId);
             return;
