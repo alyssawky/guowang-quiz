@@ -19,6 +19,7 @@ const questions = [];
   "questions-computer-002-1.js?v=20260820-1",
   "questions-computer-002-2.js?v=20260820-1",
   "questions-computer-002-3.js?v=20260820-1",
+  "computer-question-explanation-overrides.js?v=20260824-1",
   "quantity-math-format.js?v=20260821-1",
   "questions-quantity-l1.js?v=20260821-1",
   "questions-quantity-l2.js?v=20260821-1",
