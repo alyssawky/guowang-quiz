@@ -111,11 +111,22 @@
         // 记忆模糊视为一次真正的错误作答：进入错题本，也让后续正确率反映真实掌握程度。
         window.recordAnswer(question.id, false);
         const record = (typeof answerHistory !== "undefined") ? answerHistory[question.id] : null;
+        let blurCount = 0;
         if (record) {
             record.memoryBlurred = Number(record.memoryBlurred || 0) + 1;
+            blurCount = Number(record.memoryBlurred || 0);
             record.lastMistakeType = "memory-blur";
             record.lastMemoryBlurredAt = new Date().toISOString();
             if (typeof window.saveAnswerHistory === "function") window.saveAnswerHistory();
+        }
+
+        // 只要本次“记忆模糊”成功写入，就立刻提示；同一道题以后再次点会再次提示并显示累计次数。
+        if (typeof window.showMemoryBlurToast === "function") {
+            window.showMemoryBlurToast({
+                kind: "memory-blur",
+                count: blurCount || 1,
+                priority: blurCount >= 2 ? "优先级：反复遗忘" : "优先级：重点补"
+            });
         }
 
         if (typeof window.renderWrongList === "function") window.renderWrongList();
@@ -123,8 +134,8 @@
 
         feedback.innerHTML = `
             <div class="review-card answer-result wrong-result memory-blur-result">
-                <strong>记忆模糊 · 已按错题记录</strong>
-                <p class="memory-blur-note">这次不再继续猜答案，系统按一次错误记录，并直接加入错题本和薄弱知识点统计。</p>
+                <strong>记忆模糊 · 已按高优先级错题记录</strong>
+                <p class="memory-blur-note">这次不再继续猜答案。记忆模糊比普通做错权重更高；重复出现时会继续提高优先级。</p>
                 <p>正确答案：${escapeHTML(currentCorrectDisplay(question))}</p>
                 ${renderLearningExplanation(question)}
                 <button onclick="nextQuestion()">下一题</button>
@@ -202,7 +213,11 @@
         const wrong = Number(record.wrong || 0);
         const correct = Number(record.correct || 0);
         const blur = Number(record.memoryBlurred || 0);
-        const base = wrong * 2 + blur - correct;
+
+        // 普通错误仍为基础权重；“记忆模糊”表示连知识点本身都没有稳定提取出来，权重显著更高。
+        // 1次记忆模糊：2（wrong）+ 5（blur）+ 1（最近仍错）= 8，直接进入“重点补”。
+        // 后续每次再次模糊都会继续累计，优先排到普通错题之前。
+        const base = wrong * 2 + blur * 5 - correct;
         return record.lastCorrect === false ? Math.max(2, base + 1) : Math.max(0, base);
     }
 
@@ -283,12 +298,27 @@
                 <div class="weak-knowledge-heading">
                     <div>
                         <strong>错题知识点复习区</strong>
-                        <span>按当前薄弱程度排序；后续重新做对会自动降低优先级</span>
+                        <span>按当前薄弱程度排序；记忆模糊权重高于普通做错，重复模糊会继续升序</span>
                     </div>
                     <span class="weak-count">${groups.length} 个薄弱点</span>
                 </div>
                 <div class="weak-knowledge-list">
-                    ${groups.map((group, index) => `
+                    ${groups.map((group, index) => {
+                        const priority = group.blurred >= 2
+                            ? "反复遗忘"
+                            : group.blurred >= 1
+                                ? "重点补"
+                                : group.score >= 8
+                                    ? "重点补"
+                                    : group.score >= 4
+                                        ? "需要巩固"
+                                        : "轻度薄弱";
+                        const priorityClass = group.blurred >= 2
+                            ? "weak-priority-critical"
+                            : group.blurred >= 1
+                                ? "weak-priority-high"
+                                : "";
+                        return `
                         <details class="weak-knowledge-item" ${index === 0 ? "open" : ""}>
                             <summary>
                                 <div class="weak-summary-main">
@@ -298,7 +328,7 @@
                                         <small>${escapeHTML(group.category)} · ${group.questions.length} 道关联错题 · 累计错 ${group.wrong} 次${group.blurred ? ` · 记忆模糊 ${group.blurred} 次` : ""}</small>
                                     </div>
                                 </div>
-                                <span class="weak-priority">${group.score >= 8 ? "重点补" : group.score >= 4 ? "需要巩固" : "轻度薄弱"}</span>
+                                <span class="weak-priority ${priorityClass}">${priority}</span>
                             </summary>
                             <div class="weak-knowledge-body">
                                 ${group.questions
@@ -308,7 +338,7 @@
                                     .join("")}
                             </div>
                         </details>
-                    `).join("")}
+                    `;}).join("")}
                 </div>
             </section>
         `;
@@ -396,6 +426,8 @@
             .weak-summary-main strong { color: #263b37; font-size: 13px; }
             .weak-summary-main small { color: #7c8885; font-size: 11px; line-height: 1.45; }
             .weak-priority { flex-shrink: 0; padding: 4px 8px; border-radius: 999px; background: #eef7f4; color: #167667; font-size: 11px; font-weight: 700; }
+            .weak-priority-high { background: #fff3df; color: #8a5521; }
+            .weak-priority-critical { background: #fde8e5; color: #a13b32; }
             .weak-knowledge-body { display: grid; gap: 9px; padding: 10px 12px 12px; border-top: 1px solid #edf1f0; }
             .weak-knowledge-note { padding: 12px 13px; border-radius: 10px; background: #f8fbfa; }
             .weak-note-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
