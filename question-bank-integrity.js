@@ -126,6 +126,9 @@
         // 计算机错题分成两类：纯记忆直接记结论；方法理解按题型识别→步骤→本题套用→易错点复盘。
         await loadScriptOnce("weak-knowledge-computer-modes.js?v=20260820-1", "data-weak-computer-modes-loader");
 
+        // 修正进制题误判：即使题干只写“对应/等于”而没写“转换”，具体数值之间的进制映射仍属于方法理解。
+        await loadScriptOnce("computer-method-classification-fix.js?v=20260823-1", "data-computer-method-classification-fix-loader");
+
         // 计算机学习任务展示：章节标题单独一行，小节目录以更小字号显示在下一行，避免长标题被截断。
         await loadScriptOnce("computer-task-display.js?v=20260821-1", "data-computer-task-display-loader");
 
