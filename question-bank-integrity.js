@@ -100,6 +100,10 @@
         await loadScriptOnce("memory-curve.js?v=20260817-3", "data-memory-curve-loader");
 
         await loadScriptOnce("preview-knowledge-click.js?v=20260816-1", "data-preview-knowledge-loader");
+
+        // 记忆钩子升级：长答案改为口诀/关键词链，并修复“记忆钩子”圆形标签的水平垂直居中。
+        await loadScriptOnce("bank-memory-hook-upgrade.js?v=20260823-1", "data-bank-memory-hook-upgrade-loader");
+
         await loadScriptOnce("study-session-rules.js?v=20260816-1", "data-study-session-rules-loader");
 
         // 正确率：普通章节仍需完整；国网必刷题改为“当天8/9题整组完成即计入”；曲线答题继续计入并自动去重。
