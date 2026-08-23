@@ -129,6 +129,9 @@
         // 修正进制题误判：即使题干只写“对应/等于”而没写“转换”，具体数值之间的进制映射仍属于方法理解。
         await loadScriptOnce("computer-method-classification-fix.js?v=20260823-1", "data-computer-method-classification-fix-loader");
 
+        // 第二章零基础解析：保留原题解析，在前面补“概念前提→为什么→逐步计算→易错点”，重点照顾进制、补码、汉字编码等薄弱点。
+        await loadScriptOnce("computer-ch2-beginner-explanations.js?v=20260824-1", "data-computer-ch2-beginner-explanations-loader");
+
         // 计算机学习任务展示：章节标题单独一行，小节目录以更小字号显示在下一行，避免长标题被截断。
         await loadScriptOnce("computer-task-display.js?v=20260821-1", "data-computer-task-display-loader");
 
