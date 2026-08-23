@@ -1,5 +1,5 @@
-// “记忆模糊”操作成功后的轻量确认提示。
-// 不使用 MutationObserver；只在 markMemoryBlurred 真正新增一次错误记录后显示。
+// 错题/“记忆模糊”操作后的轻量确认提示。
+// 提醒由具体操作成功写入后直接调用，不再通过比较 wrong 次数间接猜测。
 (function () {
     if (window.__memoryBlurToastInstalled) return;
     window.__memoryBlurToastInstalled = true;
@@ -19,13 +19,13 @@
                 display: flex;
                 align-items: center;
                 gap: 10px;
-                max-width: min(390px, calc(100vw - 32px));
+                max-width: min(430px, calc(100vw - 32px));
                 padding: 12px 16px;
-                border: 1px solid #b9d9d4;
+                border: 1px solid #d8c5a7;
                 border-radius: 12px;
-                background: rgba(248, 253, 252, .98);
-                box-shadow: 0 12px 34px rgba(20, 77, 71, .16);
-                color: #194d46;
+                background: rgba(255, 252, 246, .99);
+                box-shadow: 0 12px 34px rgba(84, 57, 24, .16);
+                color: #66451f;
                 font-size: 13px;
                 font-weight: 700;
                 line-height: 1.5;
@@ -45,10 +45,28 @@
                 display: grid;
                 place-items: center;
                 border-radius: 50%;
-                background: #dff2ee;
-                color: #087466;
+                background: #f5e9d7;
+                color: #8a5521;
                 font-size: 15px;
                 font-weight: 900;
+            }
+            .memory-blur-toast-copy {
+                display: grid;
+                gap: 1px;
+            }
+            .memory-blur-toast-copy small {
+                color: #8a7357;
+                font-size: 11px;
+                font-weight: 600;
+            }
+            .memory-blur-toast[data-priority="critical"] {
+                border-color: #e0b3ae;
+                background: rgba(255, 249, 248, .99);
+                color: #7e302b;
+            }
+            .memory-blur-toast[data-priority="critical"] .memory-blur-toast-icon {
+                background: #f8dedb;
+                color: #a43c34;
             }
             @media (max-width: 640px) {
                 .memory-blur-toast {
@@ -62,8 +80,25 @@
         document.head.appendChild(style);
     }
 
-    function showMemoryBlurToast() {
+    function showMemoryBlurToast(options = {}) {
         installStyles();
+        const kind = options && options.kind ? options.kind : "generic";
+        const count = Math.max(0, Number(options && options.count || 0));
+        const priority = options && options.priority ? options.priority : "";
+
+        let title = "该题已自动计入错题库";
+        let detail = "";
+        let priorityStyle = "";
+
+        if (kind === "memory-blur") {
+            const repeated = count >= 2;
+            title = repeated
+                ? `再次计入错题库 · 记忆模糊第 ${count} 次`
+                : "已计入错题库 · 记忆模糊 1 次";
+            detail = priority || (repeated ? "错误等级已继续提高" : "错误等级已提高");
+            priorityStyle = repeated ? "critical" : "high";
+        }
+
         let toast = document.getElementById("memory-blur-toast");
         if (!toast) {
             toast = document.createElement("div");
@@ -71,12 +106,17 @@
             toast.className = "memory-blur-toast";
             toast.setAttribute("role", "status");
             toast.setAttribute("aria-live", "polite");
-            toast.innerHTML = `
-                <span class="memory-blur-toast-icon">✓</span>
-                <span>该题已自动计入错题库</span>
-            `;
             document.body.appendChild(toast);
         }
+
+        toast.dataset.priority = priorityStyle;
+        toast.innerHTML = `
+            <span class="memory-blur-toast-icon">✓</span>
+            <span class="memory-blur-toast-copy">
+                <span>${title}</span>
+                ${detail ? `<small>${detail}</small>` : ""}
+            </span>
+        `;
 
         if (hideTimer) window.clearTimeout(hideTimer);
         toast.classList.remove("is-visible");
@@ -85,29 +125,8 @@
 
         hideTimer = window.setTimeout(() => {
             toast.classList.remove("is-visible");
-        }, 2600);
+        }, 3000);
     }
-
-    const baseMarkMemoryBlurred = window.markMemoryBlurred;
-    if (typeof baseMarkMemoryBlurred !== "function") return;
-
-    window.markMemoryBlurred = function (...args) {
-        const question = (typeof currentReviewQuestions !== "undefined" && typeof currentQuestionIndex !== "undefined")
-            ? currentReviewQuestions[currentQuestionIndex]
-            : null;
-        const beforeWrong = question && typeof answerHistory !== "undefined" && answerHistory[question.id]
-            ? Number(answerHistory[question.id].wrong || 0)
-            : 0;
-
-        const result = baseMarkMemoryBlurred.apply(this, args);
-
-        const afterWrong = question && typeof answerHistory !== "undefined" && answerHistory[question.id]
-            ? Number(answerHistory[question.id].wrong || 0)
-            : 0;
-        if (afterWrong > beforeWrong) showMemoryBlurToast();
-
-        return result;
-    };
 
     window.showMemoryBlurToast = showMemoryBlurToast;
 })();
