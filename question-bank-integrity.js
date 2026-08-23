@@ -132,6 +132,9 @@
         // 刷题题型提示：把“单选/多选”从灰色小标签升级为题干前醒目标识。
         await loadScriptOnce("question-type-badge.js?v=20260821-1", "data-question-type-badge-loader");
 
+        // 学习型作答控制：行测/计算机方法题用“不会”，记忆题保留“记忆模糊”，并支持上一题回退。
+        await loadScriptOnce("question-learning-controls.js?v=20260823-1", "data-question-learning-controls-loader");
+
         // 所有层级默认闭合：进入错题知识点复习区后，由用户逐级点击展开。
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
 
