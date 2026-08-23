@@ -28,12 +28,29 @@ const questions = [];
 ].forEach(src => document.write(`<script src="${src}"><\/script>`));
 
 // 每日国网任务、知识解析、记忆曲线等必须等 app.js 初始化完 answerHistory / recordAnswer 后再加载。
+// 但国网300题的“每日题号→日期”必须先与 Apple 提醒事项计划同步，否则 daily-practice 会按错误日期判断“今日无新题”。
 window.addEventListener("DOMContentLoaded", () => {
-    if (!document.querySelector('script[data-question-bank-integrity]')) {
-        const integrityScript = document.createElement("script");
-        integrityScript.src = `question-bank-integrity.js?v=20260816-5&ts=${Date.now()}`;
-        integrityScript.dataset.questionBankIntegrity = "true";
-        document.body.appendChild(integrityScript);
+    const loadIntegrity = () => {
+        if (!document.querySelector('script[data-question-bank-integrity]')) {
+            const integrityScript = document.createElement("script");
+            integrityScript.src = `question-bank-integrity.js?v=20260816-5&ts=${Date.now()}`;
+            integrityScript.dataset.questionBankIntegrity = "true";
+            document.body.appendChild(integrityScript);
+        }
+    };
+
+    if (!document.querySelector('script[data-stategrid-daily-schedule-sync]')) {
+        const scheduleScript = document.createElement("script");
+        scheduleScript.src = `stategrid-daily-schedule-sync.js?v=20260823-1&ts=${Date.now()}`;
+        scheduleScript.dataset.stategridDailyScheduleSync = "true";
+        scheduleScript.onload = loadIntegrity;
+        scheduleScript.onerror = () => {
+            console.error("国网每日题目日期同步模块加载失败");
+            loadIntegrity();
+        };
+        document.body.appendChild(scheduleScript);
+    } else {
+        loadIntegrity();
     }
 
     if (!document.querySelector('script[data-answer-history-reset]')) {
