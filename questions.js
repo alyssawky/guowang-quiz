@@ -3,6 +3,7 @@
 const questions = [];
 
 // 判断推理｜逻辑论证之归因论证（xingce-002）
+// 判断推理｜第二章 逻辑论证之一般质疑（xingce-006）：例题1–32。
 // 言语理解｜第1–2章（xingce-003 / xingce-007）
 // 计算机｜第二章 数据的表示与运算（computer-002）：主文件49题；另有1道CRC补充题由 index.html 加载。
 // 数量关系｜前五讲（xingce-004 / 008 / 009 / 012 / 016）：63题；先载入数学解析格式器，再载入题库。
@@ -12,6 +13,8 @@ const questions = [];
   "questions-reasoning-attribution-2.js?v=20260816-1",
   "questions-reasoning-attribution-3.js?v=20260816-1",
   "questions-reasoning-attribution-4.js?v=20260816-1",
+  "questions-reasoning-general-challenge-1.js?v=20260826-1",
+  "questions-reasoning-general-challenge-2.js?v=20260826-1",
   "questions-verbal-ch1.js?v=20260817-1",
   "questions-verbal-ch2-1.js?v=20260817-1",
   "questions-verbal-ch2-2.js?v=20260817-1",
