@@ -6,6 +6,7 @@ const questions = [];
 // 判断推理｜第二章 逻辑论证之一般质疑（xingce-006）：例题1–32。
 // 言语理解｜第1–2章（xingce-003 / xingce-007）
 // 计算机｜第二章 数据的表示与运算（computer-002）：主文件49题；另有1道CRC补充题由 index.html 加载。
+// 计算机｜第三章 计算机硬件（computer-003）：50题，28单选+22多选；每题含A/B/C/D逐项详细解析。
 // 数量关系｜前五讲（xingce-004 / 008 / 009 / 012 / 016）：63题；先载入数学解析格式器，再载入题库。
 // 国网判断题解析补全模块在此预载，但会等 DOMContentLoaded 后再扫描 w1–w6 全量题库。
 // 在页面解析阶段同步载入，确保 app.js 初始化前对应题目已经进入 questions。
@@ -24,6 +25,9 @@ const questions = [];
   "questions-computer-002-2.js?v=20260820-1",
   "questions-computer-002-3.js?v=20260820-1",
   "computer-question-explanation-overrides.js?v=20260824-1",
+  "questions-computer-003-1.js?v=20260827-1",
+  "questions-computer-003-2.js?v=20260827-1",
+  "questions-computer-003-3.js?v=20260827-1",
   "quantity-math-format.js?v=20260821-1",
   "questions-quantity-l1.js?v=20260821-1",
   "questions-quantity-l2.js?v=20260821-1",
