@@ -7,12 +7,10 @@
         const section = document.querySelector("#wrong-list .weak-knowledge-section");
         if (!section) return;
 
-        // 一级大板块默认闭合。
         section.querySelectorAll("details.weak-major-group").forEach(details => {
             details.open = false;
         });
 
-        // 二级板块（资料分析/判断推理/硬件基础/企业文化等）也改为可折叠并默认闭合。
         section.querySelectorAll("section.weak-subgroup").forEach(block => {
             const heading = block.querySelector(":scope > .weak-subgroup-heading");
             const list = block.querySelector(":scope > .weak-subgroup-list");
@@ -52,7 +50,6 @@
             block.replaceWith(details);
         });
 
-        // 三级具体知识点也不允许继承原来的“第一项默认 open”。
         section.querySelectorAll("details.weak-knowledge-item").forEach(details => {
             details.open = false;
         });
@@ -110,8 +107,16 @@
         document.head.appendChild(style);
     }
 
+    function loadJudgeSubmitGuard() {
+        if (window.__stateGridJudgeSubmitGuardInstalled) return;
+        const script = document.createElement("script");
+        script.src = `stategrid-judge-submit-guard.js?v=20260827-1&ts=${Date.now()}`;
+        script.dataset.stategridJudgeSubmitGuard = "true";
+        script.onerror = () => console.error("国网判断题提交保险加载失败");
+        document.body.appendChild(script);
+    }
+
     function forceFreshJudgeExplanations() {
-        // 本文件由 question-bank-integrity.js 带 reload=Date.now() 动态加载，因此这里可作为可靠的运行时兜底。
         const old = document.querySelector("script[data-stategrid-judge-runtime-refresh]");
         if (old) old.remove();
 
@@ -125,8 +130,12 @@
                     console.error("国网错误判断题仍有未补正确表述", report.missingFalseIds);
                 }
             }
+            loadJudgeSubmitGuard();
         };
-        script.onerror = () => console.error("国网判断题解析强制刷新失败");
+        script.onerror = () => {
+            console.error("国网判断题解析强制刷新失败");
+            loadJudgeSubmitGuard();
+        };
         document.body.appendChild(script);
     }
 
