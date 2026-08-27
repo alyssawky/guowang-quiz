@@ -110,6 +110,26 @@
         document.head.appendChild(style);
     }
 
+    function forceFreshJudgeExplanations() {
+        // 本文件由 question-bank-integrity.js 带 reload=Date.now() 动态加载，因此这里可作为可靠的运行时兜底。
+        const old = document.querySelector("script[data-stategrid-judge-runtime-refresh]");
+        if (old) old.remove();
+
+        const script = document.createElement("script");
+        script.dataset.stategridJudgeRuntimeRefresh = "true";
+        script.src = `stategrid-judge-explanations.js?v=20260827-2&ts=${Date.now()}`;
+        script.onload = () => {
+            if (typeof window.applyStateGridJudgeExplanations === "function") {
+                const report = window.applyStateGridJudgeExplanations();
+                if (report?.missingFalseIds?.length) {
+                    console.error("国网错误判断题仍有未补正确表述", report.missingFalseIds);
+                }
+            }
+        };
+        script.onerror = () => console.error("国网判断题解析强制刷新失败");
+        document.body.appendChild(script);
+    }
+
     installStyles();
 
     const baseRenderWrongList = window.renderWrongList;
@@ -122,4 +142,5 @@
     }
 
     convertSubgroupsToDetails();
+    forceFreshJudgeExplanations();
 })();
