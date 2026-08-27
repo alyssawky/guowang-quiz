@@ -1,7 +1,8 @@
 // 国网300题｜判断题解析补全。
-// 原题库判断题只有题干/正确错误/答案；等全部同步题库脚本载入后统一补 explanation。
-// 错误判断题人工给出“错在哪 + 正确表述”；正确判断题保留整句固定表述并提示核对重点。
+// 原题库判断题只有题干/正确错误/答案；统一补 explanation。
+// 错误判断题必须给出“错在哪 + 正确表述”；正确判断题保留整句固定表述并提示核对重点。
 (() => {
+  const VERSION = 2;
   const normalize = value => String(value == null ? "" : value).replace(/\s+/g, " ").trim();
   const stripJudgeBlank = value => normalize(value)
     .replace(/[（(]\s*[）)]\s*$/, "")
@@ -17,7 +18,7 @@
     "2026-Q627": {
       wrong: "“改革为本、发展为要”不是国家电网有限公司的治企理念。",
       correct: "国家电网有限公司的治企理念是“以人为本、守正创新”。",
-      distinction: "治企理念固定记“以人为本 + 守正创新”，不要把改革、发展类工作要求替换成治企理念。"
+      distinction: "治企理念固定记“以人为本 + 守正创新”。“改革为本、发展为要”不是这一固定表述。"
     },
     "2026-Q644": {
       wrong: "错误点在“企业软实力处于全球同行业最先进水平”。“国际领先”并非只强调软实力。",
@@ -80,18 +81,19 @@
     const t = normalize(topic);
     if (t === "企业文化") return "企业文化判断题重点核对固定名称及归属：企业宗旨、企业使命、企业精神、治企理念最容易互换设错。";
     if (t === "公司战略") return "公司战略判断题重点核对战略目标、根本/追求/方向以及各业务发展定位中的固定关键词。";
-    if (t === "新型电力系统") return "新型电力系统判断题不仅考记忆，还会通过“只、必须、一律、不需”等绝对化词语或技术概念偷换来设错。";
-    if (t === "品牌建设") return "品牌建设判断题重点核对中央文件和公司制度中的固定表述，少一个限定词或偷换对象都可能判错。";
-    if (t === "形势政策") return "形势政策判断题以政策原句和固定政治表述为准，重点防止概念替换和原句后半句偷换。";
+    if (t === "新型电力系统") return "新型电力系统判断题会通过“只、必须、一律、不需”等绝对化词语或技术概念偷换来设错。";
+    if (t === "品牌建设") return "品牌建设判断题重点核对固定表述，少一个限定词或偷换对象都可能判错。";
+    if (t === "形势政策") return "形势政策判断题以题库固定表述为准，重点防止概念替换和原句后半句偷换。";
     return "判断题不要只背“对/错”，要把整句正确表述和最容易被替换的关键词一起记住。";
   }
 
   function applyJudgeExplanations() {
-    if (!Array.isArray(questions)) return;
+    if (!Array.isArray(questions)) return null;
 
     let total = 0;
+    let falseTotal = 0;
     let wrongDetailed = 0;
-    let wrongFallback = 0;
+    const missingFalseIds = [];
 
     questions.forEach(question => {
       if (!question || question.type !== "judge" || !String(question.taskId || "").startsWith("preoct300-")) return;
@@ -99,56 +101,64 @@
 
       const stem = stripJudgeBlank(question.question);
       const correction = WRONG[question.sourceId];
+      const isFalse = String(question.answer || "") === "B";
+      if (isFalse) falseTotal += 1;
 
       if (correction) {
         wrongDetailed += 1;
         question.explanation = [
           `<strong>判断：错误。</strong>`,
-          `<strong>错在哪里：</strong>${correction.wrong}`,
-          `<strong>正确表述：</strong>${correction.correct}`,
+          `<strong>为什么错误：</strong>${correction.wrong}`,
+          `<strong>正确说法：</strong>${correction.correct}`,
           `<strong>怎么区分：</strong>${correction.distinction}`,
-          `<strong>本题记忆：</strong>不要只记“B. 错误”，要记住上面的正确句。`
+          `<strong>本题记忆：</strong>不要只记“B. 错误”，要记住上面的正确表述。`
         ].join("<br><br>");
-        question.note = question.note || "判断题已补充错误点与正确表述；复习时以正确表述为记忆对象。";
+        question.note = "判断题：错误题必须记“错误原因 + 正确表述”，不能只记对错。";
         return;
       }
 
-      if (String(question.answer || "") === "A") {
+      if (!isFalse) {
         question.explanation = [
           `<strong>判断：正确。</strong>`,
-          `<strong>正确表述：</strong>${stem}。`,
-          `<strong>为什么判对：</strong>本题题干与当前题库采用的固定口径一致，没有偷换核心概念、对象或限定条件。`,
+          `<strong>正确说法：</strong>${stem}。`,
+          `<strong>为什么正确：</strong>本题题干与当前题库采用的固定表述一致，没有偷换核心概念、对象或限定条件。`,
           `<strong>复习重点：</strong>${topicTip(question.topic)}`,
           `<strong>本题记忆：</strong>把整句作为正确表述记忆，而不是只记“A. 正确”。`
         ].join("<br><br>");
         return;
       }
 
-      wrongFallback += 1;
+      missingFalseIds.push(question.sourceId || question.id || "unknown");
       question.explanation = [
         `<strong>判断：错误。</strong>`,
-        `<strong>题干：</strong>${stem}。`,
-        `<strong>解析：</strong>该表述与本题库答案口径不一致。此题尚未进入人工“正确表述”校正表，因此暂不根据猜测改写固定表述。`,
-        `<strong>复习提醒：</strong>此题应进入人工核验队列，不能只背“错误”二字。`
+        `<strong>为什么错误：</strong>该题题干与题库标准口径不一致。`,
+        `<strong>正确说法：</strong>⚠️ 该题尚未录入人工校正后的完整正确表述，请不要只背“错误”。`,
+        `<strong>处理状态：</strong>已自动进入缺失校正清单。`
       ].join("<br><br>");
-      question.note = question.note || "该错误判断题尚待人工补全正确固定表述。";
+      question.note = "检测到错误判断题缺少人工正确表述，请补充后再作为记忆材料。";
     });
 
-    window.stateGridJudgeExplanationReport = {
+    const report = {
+      version: VERSION,
       total,
+      falseTotal,
       wrongDetailed,
-      wrongFallback,
+      missingFalseIds,
       generatedAt: new Date().toISOString()
     };
-    console.info("国网判断题解析补全", window.stateGridJudgeExplanationReport);
+    window.__stateGridJudgeExplanationVersion = VERSION;
+    window.stateGridJudgeExplanationReport = report;
+    console.info("国网判断题解析补全", report);
+    if (missingFalseIds.length) console.error("存在未补正确表述的国网错误判断题", missingFalseIds);
+    return report;
   }
 
   window.applyStateGridJudgeExplanations = applyJudgeExplanations;
+  window.STATE_GRID_JUDGE_WRONG_CORRECTIONS = WRONG;
 
-  // 本文件可由 questions.js 提前加载；真正扫描要等页面中的 w1–w6 题库同步脚本全部执行完。
+  // 无论是同步载入还是后置动态载入，都立即尝试一次；DOMContentLoaded 再复核一次。
+  applyJudgeExplanations();
   if (document.readyState === "loading") {
     window.addEventListener("DOMContentLoaded", applyJudgeExplanations, { once: true });
-  } else {
-    applyJudgeExplanations();
   }
 })();
