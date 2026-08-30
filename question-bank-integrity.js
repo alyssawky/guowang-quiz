@@ -110,7 +110,11 @@
         // 国网记忆模糊闭环：重复模糊→重点出题；重点题优先进入曲线；连续3次正确→恢复正常记忆模型。
         await loadScriptOnce("memory-blur-priority-engine.js?v=20260831-1", "data-memory-blur-priority-engine-loader");
 
-        // 若存在重点题，进入记忆曲线时废弃旧曲线题序，按当前重点优先级重排；不影响其他答题断点。
+        // 国网普通错题闭环：答错越多越优先；连续3次正确→恢复正常，并自动从当前错题库移除。
+        // 放在记忆模糊引擎之后，这样普通错题与记忆模糊可以共用同一重点题排序；历史错题数据仍保留。
+        await loadScriptOnce("wrong-answer-remediation-engine.js?v=20260831-1", "data-wrong-answer-remediation-engine-loader");
+
+        // 若存在任何重点题（普通错题或记忆模糊），进入记忆曲线时废弃旧曲线题序，按当前重点优先级重排。
         await loadScriptOnce("memory-blur-session-resume-fix.js?v=20260831-1", "data-memory-blur-session-resume-fix-loader");
 
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
