@@ -87,65 +87,32 @@
         await loadScriptOnce("reset-test-answer-history.js?v=20260816-1", "data-answer-history-reset-loader");
         await loadScriptOnce("bank-memory-knowledge.js?v=20260816-1", "data-bank-memory-knowledge-loader");
         await loadScriptOnce("bank-memory-policy-knowledge.js?v=20260816-1", "data-bank-memory-policy-loader");
-
-        // 史实类国网题补充“时代背景→为什么发生→前后节点→记忆钩子”，避免只背年份/工程名。
         await loadScriptOnce("bank-history-context.js?v=20260817-1", "data-bank-history-context-loader");
-
-        // 全量史实识别：其余年份/首个/投运/改革标志/重大工程题也统一切换为背景串联式解析。
         await loadScriptOnce("bank-history-context-expanded.js?v=20260817-1", "data-bank-history-context-expanded-loader");
-
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
-
-        // 每日8/9题整组完成后，当天立即进入累计旧题池；首次曲线复习仍按+1天到期。
         await loadScriptOnce("memory-curve.js?v=20260817-3", "data-memory-curve-loader");
-
         await loadScriptOnce("preview-knowledge-click.js?v=20260816-1", "data-preview-knowledge-loader");
-
-        // 记忆钩子升级：长答案改为口诀/关键词链，并修复“记忆钩子”圆形标签的水平垂直居中。
         await loadScriptOnce("bank-memory-hook-upgrade.js?v=20260823-1", "data-bank-memory-hook-upgrade-loader");
-
         await loadScriptOnce("study-session-rules.js?v=20260816-1", "data-study-session-rules-loader");
-
-        // 正确率：普通章节仍需完整；国网必刷题改为“当天8/9题整组完成即计入”；曲线答题继续计入并自动去重。
         await loadScriptOnce("curve-accuracy-addon.js?v=20260817-2", "data-curve-accuracy-loader");
-
         await loadScriptOnce("weak-knowledge-addon.js?v=20260816-1", "data-weak-knowledge-addon-loader");
-
-        // “记忆模糊”成功写入错题后，显示几秒自动消失的确认提示。
         await loadScriptOnce("memory-blur-toast.js?v=20260817-1", "data-memory-blur-toast-loader");
-
-        // 原有记忆型错题清单；计算机后续会再按“纯记忆 / 方法理解”重新分流。
         await loadScriptOnce("weak-knowledge-memory-facts.js?v=20260816-2", "data-weak-memory-facts-loader");
-
-        // 大框架：行测→四板块；计算机→模块；国网必刷题→企业文化/战略/新型电力系统/品牌/形势政策→具体知识点。
         await loadScriptOnce("weak-knowledge-hierarchy.js?v=20260817-1", "data-weak-knowledge-hierarchy-loader");
-
-        // 行测错题单独按“具体题型→识别信号→同类题通法→本题套用”复盘，不生成记忆钩子。
         await loadScriptOnce("weak-knowledge-xingce-methods.js?v=20260819-1", "data-weak-xingce-methods-loader");
-
-        // 计算机错题分成两类：纯记忆直接记结论；方法理解按题型识别→步骤→本题套用→易错点复盘。
         await loadScriptOnce("weak-knowledge-computer-modes.js?v=20260820-1", "data-weak-computer-modes-loader");
-
-        // 修正进制题误判：即使题干只写“对应/等于”而没写“转换”，具体数值之间的进制映射仍属于方法理解。
         await loadScriptOnce("computer-method-classification-fix.js?v=20260823-1", "data-computer-method-classification-fix-loader");
-
-        // 第二章零基础解析：保留原题解析，在前面补“概念前提→为什么→逐步计算→易错点”，重点照顾进制、补码、汉字编码等薄弱点。
         await loadScriptOnce("computer-ch2-beginner-explanations.js?v=20260824-1", "data-computer-ch2-beginner-explanations-loader");
-
-        // 计算机学习任务展示：章节标题单独一行，小节目录以更小字号显示在下一行，避免长标题被截断。
         await loadScriptOnce("computer-task-display.js?v=20260821-1", "data-computer-task-display-loader");
-
-        // 刷题题型提示：把“单选/多选”从灰色小标签升级为题干前醒目标识。
         await loadScriptOnce("question-type-badge.js?v=20260821-1", "data-question-type-badge-loader");
-
-        // 学习型作答控制：行测/计算机方法题用“不会”，记忆题保留“记忆模糊”，并支持上一题回退。
         await loadScriptOnce("question-learning-controls.js?v=20260823-1", "data-question-learning-controls-loader");
 
         // 国网记忆模糊闭环：重复模糊→重点出题；重点题优先进入曲线；连续3次正确→恢复正常记忆模型。
-        // 必须放在学习控制之后加载，避免旧的 markMemoryBlurred / recordAnswer 包装器把新规则覆盖掉。
         await loadScriptOnce("memory-blur-priority-engine.js?v=20260831-1", "data-memory-blur-priority-engine-loader");
 
-        // 所有层级默认闭合：进入错题知识点复习区后，由用户逐级点击展开。
+        // 若存在重点题，进入记忆曲线时废弃旧曲线题序，按当前重点优先级重排；不影响其他答题断点。
+        await loadScriptOnce("memory-blur-session-resume-fix.js?v=20260831-1", "data-memory-blur-session-resume-fix-loader");
+
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
 
         refreshQuestionViews();
