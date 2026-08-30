@@ -141,6 +141,10 @@
         // 学习型作答控制：行测/计算机方法题用“不会”，记忆题保留“记忆模糊”，并支持上一题回退。
         await loadScriptOnce("question-learning-controls.js?v=20260823-1", "data-question-learning-controls-loader");
 
+        // 国网记忆模糊闭环：重复模糊→重点出题；重点题优先进入曲线；连续3次正确→恢复正常记忆模型。
+        // 必须放在学习控制之后加载，避免旧的 markMemoryBlurred / recordAnswer 包装器把新规则覆盖掉。
+        await loadScriptOnce("memory-blur-priority-engine.js?v=20260831-1", "data-memory-blur-priority-engine-loader");
+
         // 所有层级默认闭合：进入错题知识点复习区后，由用户逐级点击展开。
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
 
