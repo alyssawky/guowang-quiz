@@ -87,6 +87,10 @@
         await loadScriptOnce("reset-test-answer-history.js?v=20260816-1", "data-answer-history-reset-loader");
         await loadScriptOnce("bank-memory-knowledge.js?v=20260816-1", "data-bank-memory-knowledge-loader");
         await loadScriptOnce("bank-memory-policy-knowledge.js?v=20260816-1", "data-bank-memory-policy-loader");
+
+        // 固定清单型题目扩展：答案若只是“六个明确/六个领先/三个系统”等标签，必须展开完整清单并解释干扰项。
+        await loadScriptOnce("bank-fixed-list-explanations.js?v=20260831-1", "data-bank-fixed-list-explanations-loader");
+
         await loadScriptOnce("bank-history-context.js?v=20260817-1", "data-bank-history-context-loader");
         await loadScriptOnce("bank-history-context-expanded.js?v=20260817-1", "data-bank-history-context-expanded-loader");
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
