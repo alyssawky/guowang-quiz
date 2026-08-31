@@ -4,6 +4,7 @@ const questions = [];
 
 // 判断推理｜逻辑论证之归因论证（xingce-002）
 // 判断推理｜第二章 逻辑论证之一般质疑（xingce-006）：例题1–32。
+// 判断推理｜第三章 逻辑论证之支持、前提、解释（xingce-010）：31题，支持18 + 前提8 + 解释5。
 // 言语理解｜第1–2章（xingce-003 / xingce-007）
 // 计算机｜第二章 数据的表示与运算（computer-002）：主文件49题；另有1道CRC补充题由 index.html 加载。
 // 计算机｜第三章 计算机硬件（computer-003）：50题，28单选+22多选；每题含A/B/C/D逐项详细解析。
@@ -17,6 +18,8 @@ const questions = [];
   "questions-reasoning-attribution-4.js?v=20260816-1",
   "questions-reasoning-general-challenge-1.js?v=20260826-1",
   "questions-reasoning-general-challenge-2.js?v=20260826-1",
+  "questions-reasoning-support-premise-explain-1.js?v=20260831-1",
+  "questions-reasoning-support-premise-explain-2.js?v=20260831-1",
   "questions-verbal-ch1.js?v=20260817-1",
   "questions-verbal-ch2-1.js?v=20260817-1",
   "questions-verbal-ch2-2.js?v=20260817-1",
