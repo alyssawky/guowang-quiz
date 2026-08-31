@@ -120,15 +120,16 @@
         // 修复旧版升级时把历史错题/模糊题全部强制变成“30天前逾期”的假 backlog。
         await loadScriptOnce("bank-legacy-focus-migration-repair.js?v=20260831-1", "data-bank-legacy-focus-migration-repair-loader");
 
-        // 今日应刷池：历史逾期 + 今日到期 + 今日重点复现 - 今日已答对。
-        await loadScriptOnce("bank-today-due-pool-policy-v3.js?v=20260831-3", "data-bank-today-due-pool-policy-v3-loader");
+        // 今日应刷池 v4：历史逾期 + 今日到期 + 今日重点复现 - 今日已答对。
+        // 点击后一次性刷完当前全部今日池，不再限制12题/重点4题；退出后再进只继续当前剩余题。
+        await loadScriptOnce("bank-today-due-pool-policy-v3.js?v=20260901-4", "data-bank-today-due-pool-policy-v3-loader");
 
         // 最终长期曲线统一策略：1→2→4→7→15→30→60→90天，90天封顶；
         // 错题/记忆模糊跨日3次正确后按原档位退回7天或15天，再继续长期曲线。
         await loadScriptOnce("bank-long-term-memory-curve-policy.js?v=20260901-1", "data-bank-long-term-memory-curve-policy-loader");
 
-        // 在用户浏览器本地显示今日池组成，便于区分真逾期、今日到期、重点和已排除；数据不上传。
-        await loadScriptOnce("bank-curve-diagnostics.js?v=20260831-1", "data-bank-curve-diagnostics-loader");
+        // 浏览器本地曲线详情 v3：挂在整张每日卡片外部，不参与卡片内部 flex 布局。
+        await loadScriptOnce("bank-curve-diagnostics.js?v=20260901-3", "data-bank-curve-diagnostics-loader");
 
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
 
