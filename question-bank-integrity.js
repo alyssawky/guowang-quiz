@@ -129,8 +129,11 @@
         // 每轮最多12题，重点错题/记忆模糊最多4题；连续3次正确必须跨3个不同日期。
         await loadScriptOnce("bank-curve-ratio-spacing-policy.js?v=20260831-1", "data-bank-curve-ratio-spacing-policy-loader");
 
-        // 最终“今日应刷池”规则：只出今天真正到期/应复现的题；今天答对过的题当日后续回合彻底排除；绝不拿未来题补12道。
+        // 今日应刷池基础规则：只出今天真正到期/应复现的题；今天答对后当日排除；不拿未来题补12道。
         await loadScriptOnce("bank-today-due-pool-policy.js?v=20260831-1", "data-bank-today-due-pool-policy-loader");
+
+        // 今日应刷池 v2 最终覆盖：显式拆分“历史逾期 + 今日到期 + 重点复现”，三类统一排除今天已答对题；逾期越久优先级越高。
+        await loadScriptOnce("bank-today-due-pool-policy-v2.js?v=20260831-2", "data-bank-today-due-pool-policy-v2-loader");
 
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
 
