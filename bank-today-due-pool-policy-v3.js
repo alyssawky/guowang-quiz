@@ -1,16 +1,15 @@
-// 国网记忆曲线最终“今日应刷池”策略 v3。
+// 国网记忆曲线最终“今日应刷池”策略 v4。
 // 今日应刷池 = 历史逾期 + 今日到期 + 今日应复现的错题/记忆模糊题 - 今天已经答对过的题。
-// 每轮最多12题；重点题最多4题；不提前抽未来题；逾期越久优先级越高。
+// v4：点击“今日曲线”时一次性装入今天全部剩余应刷题，不再限制12题，也不再限制重点题4题。
+// 中途退出后再次进入，会按当前本地记录重新计算剩余今日池：已答对/今日已处理的题不再出现，未完成题继续刷。
 (function () {
-    const VERSION = 3;
+    const VERSION = 4;
     if (Number(window.__bankTodayDuePoolFinalVersion || 0) >= VERSION) return;
     window.__bankTodayDuePoolFinalVersion = VERSION;
 
-    const SESSION_LIMIT = 12;
-    const FOCUS_LIMIT = 4;
     const CURVE_STORE_KEY = "guowang-memory-curve-v2";
     const SESSION_STORE_KEY = "guowang-review-session-store-v1";
-    const INTERVALS = [1, 2, 4, 7, 15, 30];
+    const INTERVALS = [1, 2, 4, 7, 15, 30, 60, 90];
 
     function safeParse(value, fallback) {
         try { return value ? JSON.parse(value) : fallback; }
@@ -47,7 +46,9 @@
     }
 
     function taskOf(question) {
-        return typeof studyPlan !== "undefined" ? studyPlan.find(task => task.id === question?.taskId) || null : null;
+        return typeof studyPlan !== "undefined"
+            ? studyPlan.find(task => task.id === question?.taskId) || null
+            : null;
     }
 
     function isBankQuestion(question) {
@@ -60,7 +61,9 @@
     }
 
     function recordOf(questionId) {
-        return typeof answerHistory !== "undefined" && answerHistory ? answerHistory[questionId] || null : null;
+        return typeof answerHistory !== "undefined" && answerHistory
+            ? answerHistory[questionId] || null
+            : null;
     }
 
     function saveHistory() {
@@ -85,8 +88,14 @@
         const store = loadCurveStore();
         if (store[question.id]) return store[question.id];
         const record = recordOf(question.id);
-        const baseDate = record?.lastAnsweredAt ? isoFromTimestamp(record.lastAnsweredAt) : question.unlockDate;
-        return { level: 0, dueDate: addDaysISO(baseDate, INTERVALS[0]), lastReviewedDate: baseDate };
+        const baseDate = record?.lastAnsweredAt
+            ? isoFromTimestamp(record.lastAnsweredAt)
+            : question.unlockDate;
+        return {
+            level: 0,
+            dueDate: addDaysISO(baseDate, INTERVALS[0]),
+            lastReviewedDate: baseDate
+        };
     }
 
     function answeredCorrectToday(question) {
@@ -98,7 +107,10 @@
     }
 
     function isFocusRecord(record) {
-        return Boolean(record && (record.wrongFocusActive === true || record.memoryBlurFocusActive === true));
+        return Boolean(record && (
+            record.wrongFocusActive === true ||
+            record.memoryBlurFocusActive === true
+        ));
     }
 
     function focusTouchedToday(record) {
@@ -129,7 +141,9 @@
 
     function focusScore(question) {
         const r = recordOf(question.id) || {};
-        return lifetimeWrong(r) * 1200 + Number(r.memoryBlurred || 0) * 1500 + (3 - Math.min(3, Number(r.wrongFocusStreak || 0))) * 20;
+        return lifetimeWrong(r) * 1200 +
+            Number(r.memoryBlurred || 0) * 1500 +
+            (3 - Math.min(3, Number(r.wrongFocusStreak || 0))) * 20;
     }
 
     function normalClass(question) {
@@ -146,15 +160,21 @@
     function normalUrgency(question) {
         const schedule = scheduleFor(question);
         const dueDate = String(schedule?.dueDate || "");
-        const overdueDays = dueDate < localISO() ? Math.max(1, dayDiff(dueDate, localISO())) : 0;
-        const level = Math.max(0, Math.min(INTERVALS.length - 1, Number(schedule?.level || 0)));
+        const overdueDays = dueDate < localISO()
+            ? Math.max(1, dayDiff(dueDate, localISO()))
+            : 0;
+        const level = Math.max(
+            0,
+            Math.min(INTERVALS.length - 1, Number(schedule?.level || 0))
+        );
         return 100 + overdueDays * 40 + (INTERVALS.length - level) * 2;
     }
 
-    function weightedSample(list, count) {
+    // 这里不再用于“截取若干题”，只用于给全部正常题生成一个“逾期越久越靠前”的随机顺序。
+    function weightedOrder(list) {
         const pool = list.slice();
         const result = [];
-        while (pool.length && result.length < count) {
+        while (pool.length) {
             const weights = pool.map(normalUrgency);
             const total = weights.reduce((sum, value) => sum + value, 0);
             let cursor = Math.random() * Math.max(total, 1);
@@ -170,7 +190,9 @@
 
     function todayPools() {
         const pool = reviewablePool();
-        const focus = pool.filter(focusEligibleToday).sort((a, b) => focusScore(b) - focusScore(a));
+        const focus = pool
+            .filter(focusEligibleToday)
+            .sort((a, b) => focusScore(b) - focusScore(a));
         const overdue = pool.filter(question => normalClass(question) === "overdue");
         const dueToday = pool.filter(question => normalClass(question) === "today");
         return { focus, overdue, dueToday };
@@ -178,9 +200,13 @@
 
     function buildTodaySession() {
         const pools = todayPools();
-        const focus = pools.focus.slice(0, FOCUS_LIMIT);
-        const normal = weightedSample([...pools.overdue, ...pools.dueToday], Math.max(0, SESSION_LIMIT - focus.length));
+
+        // v4 核心：今日池有多少就一次装多少。
+        // 重点题不再只取4道，正常题也不再只补到12道。
+        const focus = pools.focus.slice();
+        const normal = weightedOrder([...pools.overdue, ...pools.dueToday]);
         const overdueCount = normal.filter(question => normalClass(question) === "overdue").length;
+
         return {
             list: [...focus, ...normal],
             focusCount: focus.length,
@@ -193,6 +219,8 @@
         };
     }
 
+    // 今日曲线每次进入都按“此刻还剩什么”重新计算，所以旧的曲线断点题序应清掉。
+    // 这样中途退出再进入时，今天已答对/已处理的题自然消失，只继续剩余题。
     function clearStoredCurveSessions() {
         const store = safeParse(localStorage.getItem(SESSION_STORE_KEY), {});
         let changed = false;
@@ -212,15 +240,17 @@
         const pools = todayPools();
         const total = pools.focus.length + pools.overdue.length + pools.dueToday.length;
         button.disabled = total === 0;
-        button.textContent = total > 0 ? `今日曲线 · 待刷${total}题` : "今日曲线已完成";
+        button.textContent = total > 0
+            ? `今日曲线 · 待刷${total}题`
+            : "今日曲线已完成";
         button.title = total > 0
-            ? `历史逾期 ${pools.overdue.length} + 今日到期 ${pools.dueToday.length} + 重点复现 ${pools.focus.length}。今天答对过的题已排除。`
+            ? `历史逾期 ${pools.overdue.length} + 今日到期 ${pools.dueToday.length} + 重点复现 ${pools.focus.length}。点击后一次刷完当前全部 ${total} 道；中途退出后再次进入只继续剩余题。`
             : "今天没有剩余逾期、到期或重点复现题。";
     }
 
     const baseStartQuestionSession = window.startQuestionSession;
-    if (typeof baseStartQuestionSession === "function" && !window.__bankTodayDueV3StartWrapped) {
-        window.__bankTodayDueV3StartWrapped = true;
+    if (typeof baseStartQuestionSession === "function" && !window.__bankTodayDueV4StartWrapped) {
+        window.__bankTodayDueV4StartWrapped = true;
         window.startQuestionSession = function (questionList, title, sequenceText = "") {
             if (!String(title || "").includes("记忆曲线答题")) {
                 return baseStartQuestionSession.call(this, questionList, title, sequenceText);
@@ -228,17 +258,22 @@
 
             const session = buildTodaySession();
             clearStoredCurveSessions();
+
             if (!session.list.length) {
                 window.__memoryCurveQuizActive = false;
                 window.__memoryCurveQuizQuestionIds = new Set();
                 patchButton();
+                if (typeof window.__refreshBankCurveDiagnostics === "function") {
+                    window.__refreshBankCurveDiagnostics();
+                }
                 return;
             }
 
-            const text = `今日应刷池${session.pendingTotal}题（逾期${session.pendingOverdue} + 今日到期${session.pendingDueToday} + 重点复现${session.pendingFocus}） · 本轮逾期${session.overdueCount} + 今日到期${session.dueTodayCount} + 重点${session.focusCount} · 今日答对后当日不再出现`;
+            const text = `今日应刷池${session.pendingTotal}题（逾期${session.pendingOverdue} + 今日到期${session.pendingDueToday} + 重点复现${session.pendingFocus}） · 本次一次刷完全部${session.list.length}题 · 今日答对后当日不再出现`;
             const finalSequence = `${sequenceText || ""}${sequenceText ? " · " : ""}${text}`;
             const result = baseStartQuestionSession.call(this, session.list, title, finalSequence);
 
+            // 最终保证页面使用的是“完整今日剩余池”，而不是前面旧模块生成的4/12题小批次。
             if (typeof currentReviewQuestions !== "undefined") {
                 currentReviewQuestions = session.list.slice();
                 currentQuestionIndex = 0;
@@ -246,14 +281,18 @@
                 window.__memoryCurveQuizQuestionIds = new Set(session.list.map(question => question.id));
                 if (typeof renderQuestion === "function") renderQuestion();
             }
+
             setTimeout(patchButton, 20);
+            if (typeof window.__refreshBankCurveDiagnostics === "function") {
+                setTimeout(window.__refreshBankCurveDiagnostics, 40);
+            }
             return result;
         };
     }
 
     const baseRecordAnswer = window.recordAnswer;
-    if (typeof baseRecordAnswer === "function" && !window.__bankTodayDueV3RecordWrapped) {
-        window.__bankTodayDueV3RecordWrapped = true;
+    if (typeof baseRecordAnswer === "function" && !window.__bankTodayDueV4RecordWrapped) {
+        window.__bankTodayDueV4RecordWrapped = true;
         window.recordAnswer = function (questionId, isCorrect, ...rest) {
             const result = baseRecordAnswer.call(this, questionId, isCorrect, ...rest);
             const question = questions.find(q => q.id === questionId);
@@ -263,6 +302,9 @@
                 saveHistory();
             }
             setTimeout(patchButton, 40);
+            if (typeof window.__refreshBankCurveDiagnostics === "function") {
+                setTimeout(window.__refreshBankCurveDiagnostics, 60);
+            }
             return result;
         };
     }
@@ -275,7 +317,8 @@
             overdue: pools.overdue.length,
             dueToday: pools.dueToday.length,
             focus: pools.focus.length,
-            questionIds: [...pools.overdue, ...pools.dueToday, ...pools.focus].map(q => q.id)
+            questionIds: [...pools.focus, ...pools.overdue, ...pools.dueToday].map(q => q.id),
+            sessionMode: "all-today-at-once"
         };
     };
 
