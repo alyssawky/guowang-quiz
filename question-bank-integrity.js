@@ -87,13 +87,8 @@
         await loadScriptOnce("reset-test-answer-history.js?v=20260816-1", "data-answer-history-reset-loader");
         await loadScriptOnce("bank-memory-knowledge.js?v=20260816-1", "data-bank-memory-knowledge-loader");
         await loadScriptOnce("bank-memory-policy-knowledge.js?v=20260816-1", "data-bank-memory-policy-loader");
-
-        // 固定清单型题目扩展。
         await loadScriptOnce("bank-fixed-list-explanations.js?v=20260831-1", "data-bank-fixed-list-explanations-loader");
-
-        // 计划/阶段目标题时间轴扩展。
         await loadScriptOnce("bank-plan-timeline-explanations.js?v=20260831-1", "data-bank-plan-timeline-explanations-loader");
-
         await loadScriptOnce("bank-history-context.js?v=20260817-1", "data-bank-history-context-loader");
         await loadScriptOnce("bank-history-context-expanded.js?v=20260817-1", "data-bank-history-context-expanded-loader");
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
@@ -117,25 +112,25 @@
         await loadScriptOnce("question-type-badge.js?v=20260821-1", "data-question-type-badge-loader");
         await loadScriptOnce("question-learning-controls.js?v=20260823-1", "data-question-learning-controls-loader");
 
-        // 国网记忆模糊闭环。
         await loadScriptOnce("memory-blur-priority-engine.js?v=20260831-1", "data-memory-blur-priority-engine-loader");
-
-        // 国网普通错题闭环。
         await loadScriptOnce("wrong-answer-remediation-engine.js?v=20260831-1", "data-wrong-answer-remediation-engine-loader");
-
-        // 统一安全 getter。
         await loadScriptOnce("wrong-answer-focus-getter-fix.js?v=20260831-1", "data-wrong-answer-focus-getter-fix-loader");
-
-        // 旧曲线断点不锁死旧题序。
         await loadScriptOnce("memory-blur-session-resume-fix.js?v=20260831-1", "data-memory-blur-session-resume-fix-loader");
 
-        // 唯一最终曲线策略 v3：今日应刷池 = 历史逾期 + 今日到期 + 重点复现 - 今日已答对。
-        // 每轮最多12题，重点最多4题；逾期越久优先；不足12题不拿未来题补。
+        // 修复旧版升级时把所有历史错题/模糊题强制改成“30天前逾期”的假 backlog。
+        // 只处理没有新机制真实答错/再次模糊触发的旧迁移记录；已经开始1/3、2/3的进度保留。
+        await loadScriptOnce("bank-legacy-focus-migration-repair.js?v=20260831-1", "data-bank-legacy-focus-migration-repair-loader");
+
+        // 唯一最终曲线策略：历史逾期 + 今日到期 + 今日重点复现 - 今日已答对。
         await loadScriptOnce("bank-today-due-pool-policy-v3.js?v=20260831-3", "data-bank-today-due-pool-policy-v3-loader");
+
+        // 在用户浏览器本地显示今日池组成，便于区分真逾期、今日到期、重点和已排除；数据不上传。
+        await loadScriptOnce("bank-curve-diagnostics.js?v=20260831-1", "data-bank-curve-diagnostics-loader");
 
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
 
         refreshQuestionViews();
+        if (typeof window.__refreshBankCurveDiagnostics === "function") window.__refreshBankCurveDiagnostics();
     }
 
     if (document.readyState === "loading") {
