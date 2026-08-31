@@ -126,9 +126,11 @@
         // 若存在任何重点题，旧曲线断点不再锁死旧题序。
         await loadScriptOnce("memory-blur-session-resume-fix.js?v=20260831-1", "data-memory-blur-session-resume-fix-loader");
 
-        // 最终曲线策略：每轮最多12题，重点错题/记忆模糊最多4题，其余全部正常曲线；同一道重点题不得同日反复出现。
-        // 连续3次正确必须跨3个不同日期，同日重复答对不累计巩固次数。
+        // 每轮最多12题，重点错题/记忆模糊最多4题；连续3次正确必须跨3个不同日期。
         await loadScriptOnce("bank-curve-ratio-spacing-policy.js?v=20260831-1", "data-bank-curve-ratio-spacing-policy-loader");
+
+        // 最终“今日应刷池”规则：只出今天真正到期/应复现的题；今天答对过的题当日后续回合彻底排除；绝不拿未来题补12道。
+        await loadScriptOnce("bank-today-due-pool-policy.js?v=20260831-1", "data-bank-today-due-pool-policy-loader");
 
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
 
