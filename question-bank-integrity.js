@@ -88,16 +88,19 @@
         await loadScriptOnce("bank-memory-knowledge.js?v=20260816-1", "data-bank-memory-knowledge-loader");
         await loadScriptOnce("bank-memory-policy-knowledge.js?v=20260816-1", "data-bank-memory-policy-loader");
 
-        // 固定清单型题目扩展：答案若只是“六个明确/六个领先/三个系统”等标签，必须展开完整清单并解释干扰项。
+        // 固定清单型题目扩展。
         await loadScriptOnce("bank-fixed-list-explanations.js?v=20260831-1", "data-bank-fixed-list-explanations-loader");
 
-        // 计划/阶段目标题：补知识来源、2030—2035同轴节点、当前2026口径与旧版题库版本辨析。
+        // 计划/阶段目标题时间轴扩展。
         await loadScriptOnce("bank-plan-timeline-explanations.js?v=20260831-1", "data-bank-plan-timeline-explanations-loader");
 
         await loadScriptOnce("bank-history-context.js?v=20260817-1", "data-bank-history-context-loader");
         await loadScriptOnce("bank-history-context-expanded.js?v=20260817-1", "data-bank-history-context-expanded-loader");
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
-        await loadScriptOnce("memory-curve.js?v=20260817-3", "data-memory-curve-loader");
+
+        // v4 底层曲线入口：只要已有实际作答且今天存在逾期/到期/重点复现，就允许进入；不再要求整组完成。
+        await loadScriptOnce("memory-curve.js?v=20260831-4", "data-memory-curve-loader");
+
         await loadScriptOnce("preview-knowledge-click.js?v=20260816-1", "data-preview-knowledge-loader");
         await loadScriptOnce("bank-memory-hook-upgrade.js?v=20260823-1", "data-bank-memory-hook-upgrade-loader");
         await loadScriptOnce("study-session-rules.js?v=20260816-1", "data-study-session-rules-loader");
@@ -114,26 +117,21 @@
         await loadScriptOnce("question-type-badge.js?v=20260821-1", "data-question-type-badge-loader");
         await loadScriptOnce("question-learning-controls.js?v=20260823-1", "data-question-learning-controls-loader");
 
-        // 国网记忆模糊闭环：重复模糊→重点出题；重点题优先进入曲线；连续3次正确→恢复正常记忆模型。
+        // 国网记忆模糊闭环。
         await loadScriptOnce("memory-blur-priority-engine.js?v=20260831-1", "data-memory-blur-priority-engine-loader");
 
-        // 国网普通错题闭环：答错越多越优先；连续3次正确→恢复正常，并自动从当前错题库移除。
+        // 国网普通错题闭环。
         await loadScriptOnce("wrong-answer-remediation-engine.js?v=20260831-1", "data-wrong-answer-remediation-engine-loader");
 
-        // 统一安全 getter：直接从答题历史读取普通错题/记忆模糊重点状态，避免两个重点引擎互相递归调用。
+        // 统一安全 getter。
         await loadScriptOnce("wrong-answer-focus-getter-fix.js?v=20260831-1", "data-wrong-answer-focus-getter-fix-loader");
 
-        // 若存在任何重点题，旧曲线断点不再锁死旧题序。
+        // 旧曲线断点不锁死旧题序。
         await loadScriptOnce("memory-blur-session-resume-fix.js?v=20260831-1", "data-memory-blur-session-resume-fix-loader");
 
-        // 每轮最多12题，重点错题/记忆模糊最多4题；连续3次正确必须跨3个不同日期。
-        await loadScriptOnce("bank-curve-ratio-spacing-policy.js?v=20260831-1", "data-bank-curve-ratio-spacing-policy-loader");
-
-        // 今日应刷池基础规则：只出今天真正到期/应复现的题；今天答对后当日排除；不拿未来题补12道。
-        await loadScriptOnce("bank-today-due-pool-policy.js?v=20260831-1", "data-bank-today-due-pool-policy-loader");
-
-        // 今日应刷池 v2 最终覆盖：显式拆分“历史逾期 + 今日到期 + 重点复现”，三类统一排除今天已答对题；逾期越久优先级越高。
-        await loadScriptOnce("bank-today-due-pool-policy-v2.js?v=20260831-2", "data-bank-today-due-pool-policy-v2-loader");
+        // 唯一最终曲线策略 v3：今日应刷池 = 历史逾期 + 今日到期 + 重点复现 - 今日已答对。
+        // 每轮最多12题，重点最多4题；逾期越久优先；不足12题不拿未来题补。
+        await loadScriptOnce("bank-today-due-pool-policy-v3.js?v=20260831-3", "data-bank-today-due-pool-policy-v3-loader");
 
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
 
