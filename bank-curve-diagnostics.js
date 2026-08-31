@@ -223,7 +223,6 @@
         let line = document.getElementById(LINE_ID);
         if (!line) line = createLine();
 
-        // 卡片被 innerHTML 重绘后，旧 line 会被删除；每次都确认它紧跟整排按钮之后。
         if (!line.isConnected || line.previousElementSibling !== anchor) {
             anchor.insertAdjacentElement("afterend", line);
         }
@@ -235,20 +234,18 @@
     window.getBankCurveDiagnostics = report;
     window.__refreshBankCurveDiagnostics = mountAndRefresh;
 
-    // 首次加载 + 页面随后 refreshQuestionViews 重绘后的多次兜底。
+    // 直接接管首页国网卡片的重绘完成点：每次卡片 innerHTML 重建后，立即把诊断条重新挂回去。
+    const baseRenderDailyPracticeCard = window.renderDailyPracticeCard;
+    if (typeof baseRenderDailyPracticeCard === "function" && !window.__bankCurveDiagnosticsRenderWrapped) {
+        window.__bankCurveDiagnosticsRenderWrapped = true;
+        window.renderDailyPracticeCard = function (...args) {
+            const result = baseRenderDailyPracticeCard.apply(this, args);
+            setTimeout(mountAndRefresh, 0);
+            return result;
+        };
+    }
+
+    // 首次加载和异步模块加载后的兜底。
     mountAndRefresh();
     [0, 50, 150, 350, 800, 1600].forEach(delay => setTimeout(mountAndRefresh, delay));
-
-    // 首页卡片会被 renderDailyPracticeCard 反复 innerHTML 重绘；观察 DOM 后自动重新挂载。
-    let observerTimer = null;
-    const observer = new MutationObserver(() => {
-        clearTimeout(observerTimer);
-        observerTimer = setTimeout(() => {
-            if (document.getElementById("start-cumulative-memory")) mountAndRefresh();
-        }, 30);
-    });
-
-    const observeRoot = document.getElementById("daily-practice-card")?.parentElement || document.body;
-    if (observeRoot) observer.observe(observeRoot, { childList: true, subtree: true });
-    window.__bankCurveDiagnosticsObserver = observer;
 })();
