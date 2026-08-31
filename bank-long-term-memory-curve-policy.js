@@ -3,7 +3,7 @@
 // 错题/记忆模糊：继续执行“跨不同日期连续答对3次”重点巩固；完全恢复后，
 // 原曲线已到30/60/90天档则回15天档，否则回7天档，再重新向30/60/90天推进。
 (function () {
-    const VERSION = 1;
+    const VERSION = 2;
     if (Number(window.__bankLongTermMemoryCurveVersion || 0) >= VERSION) return;
     window.__bankLongTermMemoryCurveVersion = VERSION;
 
@@ -241,7 +241,7 @@
                 const curveText = "1→2→4→7→15→30→60→90天";
                 finalSequence = String(sequenceText || "")
                     .replace(/1→2→4→7→15→30天/g, curveText)
-                    .replace(/1→2→4→7→15→30/g, curveText.replace(/天$/, ""));
+                    .replace(/1→2→4→7→15→30(?!→60)/g, "1→2→4→7→15→30→60→90");
                 if (!finalSequence.includes("60→90")) {
                     finalSequence = `${finalSequence}${finalSequence ? " · " : ""}长期曲线：${curveText}`;
                 }
