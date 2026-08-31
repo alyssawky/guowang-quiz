@@ -1,7 +1,8 @@
-// 国网曲线本地数据诊断 v2：所有统计都在用户浏览器 localStorage 内计算，不上传个人答题记录。
-// v2 修复：国网首页卡片重绘后自动重新挂载；诊断条固定显示在整排曲线/预习/必刷按钮下方。
+// 国网曲线本地数据诊断 v3：所有统计都在用户浏览器 localStorage 内计算，不上传个人答题记录。
+// v3 修复：首页卡片本身是横向 flex，诊断条绝不能作为卡片内部第三个 flex 子项；
+// 现在固定挂在整张“每日记忆与刷题”卡片下方，不参与卡片内部布局。
 (function () {
-    const VERSION = 2;
+    const VERSION = 3;
     if (Number(window.__bankCurveDiagnosticsVersion || 0) >= VERSION) return;
     window.__bankCurveDiagnosticsVersion = VERSION;
 
@@ -121,7 +122,7 @@
         style.id = "bank-curve-diagnostics-style";
         style.textContent = `
             #${LINE_ID} {
-                margin-top: 10px;
+                margin: -4px 0 14px;
                 padding: 9px 12px;
                 border: 1px solid #e4e7ec;
                 border-radius: 10px;
@@ -135,7 +136,9 @@
                 justify-content: space-between;
                 flex-wrap: wrap;
                 width: 100%;
+                max-width: 100%;
                 box-sizing: border-box;
+                clear: both;
             }
             #${LINE_ID} .bank-curve-diagnostic-summary { min-width: 0; }
             #${LINE_ID} .bank-curve-detail-btn {
@@ -190,10 +193,10 @@
         });
     }
 
-    function getAnchor() {
+    function getCard() {
         const button = document.getElementById("start-cumulative-memory");
         if (!button) return null;
-        return button.closest(".daily-practice-actions") || button.parentElement || button;
+        return button.closest(".daily-practice-card") || document.getElementById("daily-practice-card");
     }
 
     function createLine() {
@@ -217,14 +220,15 @@
     }
 
     function mountAndRefresh() {
-        const anchor = getAnchor();
-        if (!anchor || !anchor.parentNode) return false;
+        const card = getCard();
+        if (!card || !card.parentNode) return false;
 
         let line = document.getElementById(LINE_ID);
         if (!line) line = createLine();
 
-        if (!line.isConnected || line.previousElementSibling !== anchor) {
-            anchor.insertAdjacentElement("afterend", line);
+        // 关键：必须是整张 daily-practice-card 的兄弟元素，绝不能放进 card 内部 flex。
+        if (!line.isConnected || line.previousElementSibling !== card) {
+            card.insertAdjacentElement("afterend", line);
         }
 
         renderLine(line);
@@ -234,7 +238,6 @@
     window.getBankCurveDiagnostics = report;
     window.__refreshBankCurveDiagnostics = mountAndRefresh;
 
-    // 直接接管首页国网卡片的重绘完成点：每次卡片 innerHTML 重建后，立即把诊断条重新挂回去。
     const baseRenderDailyPracticeCard = window.renderDailyPracticeCard;
     if (typeof baseRenderDailyPracticeCard === "function" && !window.__bankCurveDiagnosticsRenderWrapped) {
         window.__bankCurveDiagnosticsRenderWrapped = true;
@@ -245,7 +248,6 @@
         };
     }
 
-    // 首次加载和异步模块加载后的兜底。
     mountAndRefresh();
     [0, 50, 150, 350, 800, 1600].forEach(delay => setTimeout(mountAndRefresh, delay));
 })();
