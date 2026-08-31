@@ -93,7 +93,7 @@
         await loadScriptOnce("bank-history-context-expanded.js?v=20260817-1", "data-bank-history-context-expanded-loader");
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
 
-        // v4 底层曲线入口：只要已有实际作答且今天存在逾期/到期/重点复现，就允许进入；不再要求整组完成。
+        // 底层曲线入口：今天存在逾期/到期/重点复现即可进入，不要求整组完成。
         await loadScriptOnce("memory-curve.js?v=20260831-4", "data-memory-curve-loader");
 
         await loadScriptOnce("preview-knowledge-click.js?v=20260816-1", "data-preview-knowledge-loader");
@@ -117,12 +117,15 @@
         await loadScriptOnce("wrong-answer-focus-getter-fix.js?v=20260831-1", "data-wrong-answer-focus-getter-fix-loader");
         await loadScriptOnce("memory-blur-session-resume-fix.js?v=20260831-1", "data-memory-blur-session-resume-fix-loader");
 
-        // 修复旧版升级时把所有历史错题/模糊题强制改成“30天前逾期”的假 backlog。
-        // 只处理没有新机制真实答错/再次模糊触发的旧迁移记录；已经开始1/3、2/3的进度保留。
+        // 修复旧版升级时把历史错题/模糊题全部强制变成“30天前逾期”的假 backlog。
         await loadScriptOnce("bank-legacy-focus-migration-repair.js?v=20260831-1", "data-bank-legacy-focus-migration-repair-loader");
 
-        // 唯一最终曲线策略：历史逾期 + 今日到期 + 今日重点复现 - 今日已答对。
+        // 今日应刷池：历史逾期 + 今日到期 + 今日重点复现 - 今日已答对。
         await loadScriptOnce("bank-today-due-pool-policy-v3.js?v=20260831-3", "data-bank-today-due-pool-policy-v3-loader");
+
+        // 最终长期曲线统一策略：1→2→4→7→15→30→60→90天，90天封顶；
+        // 错题/记忆模糊跨日3次正确后按原档位退回7天或15天，再继续长期曲线。
+        await loadScriptOnce("bank-long-term-memory-curve-policy.js?v=20260901-1", "data-bank-long-term-memory-curve-policy-loader");
 
         // 在用户浏览器本地显示今日池组成，便于区分真逾期、今日到期、重点和已排除；数据不上传。
         await loadScriptOnce("bank-curve-diagnostics.js?v=20260831-1", "data-bank-curve-diagnostics-loader");
