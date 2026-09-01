@@ -1,5 +1,5 @@
 // 错题/“记忆模糊”操作后的轻量确认提示。
-// 提醒由具体操作成功写入后直接调用，不再通过比较 wrong 次数间接猜测。
+// 仅负责提示，不再加载或修改任何“今日曲线”按钮/题池逻辑。
 (function () {
     if (window.__memoryBlurToastInstalled) return;
     window.__memoryBlurToastInstalled = true;
@@ -129,13 +129,4 @@
     }
 
     window.showMemoryBlurToast = showMemoryBlurToast;
-})();
-
-// 稳定加载首页累计池同步补丁：让“累计记忆”显示与 memory-curve.js 的真实答题池完全一致。
-(function () {
-    if (document.querySelector('script[data-daily-curve-pool-sync-loader]')) return;
-    const script = document.createElement('script');
-    script.src = `daily-curve-pool-sync.js?v=20260817-1&reload=${Date.now()}`;
-    script.setAttribute('data-daily-curve-pool-sync-loader', 'true');
-    document.body.appendChild(script);
 })();
