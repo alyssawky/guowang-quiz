@@ -93,7 +93,7 @@
         await loadScriptOnce("bank-history-context-expanded.js?v=20260817-1", "data-bank-history-context-expanded-loader");
         await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
 
-        // 底层曲线入口：今天存在逾期/到期/重点复现即可进入，不要求整组完成。
+        // 底层曲线只负责保存/推进基础 schedule；最终“今天刷什么”由最后的唯一控制器决定。
         await loadScriptOnce("memory-curve.js?v=20260831-4", "data-memory-curve-loader");
 
         await loadScriptOnce("preview-knowledge-click.js?v=20260816-1", "data-preview-knowledge-loader");
@@ -101,7 +101,7 @@
         await loadScriptOnce("study-session-rules.js?v=20260816-1", "data-study-session-rules-loader");
         await loadScriptOnce("curve-accuracy-addon.js?v=20260817-2", "data-curve-accuracy-loader");
         await loadScriptOnce("weak-knowledge-addon.js?v=20260816-1", "data-weak-knowledge-addon-loader");
-        await loadScriptOnce("memory-blur-toast.js?v=20260817-1", "data-memory-blur-toast-loader");
+        await loadScriptOnce("memory-blur-toast.js?v=20260901-2", "data-memory-blur-toast-loader");
         await loadScriptOnce("weak-knowledge-memory-facts.js?v=20260816-2", "data-weak-memory-facts-loader");
         await loadScriptOnce("weak-knowledge-hierarchy.js?v=20260817-1", "data-weak-knowledge-hierarchy-loader");
         await loadScriptOnce("weak-knowledge-xingce-methods.js?v=20260819-1", "data-weak-xingce-methods-loader");
@@ -112,6 +112,7 @@
         await loadScriptOnce("question-type-badge.js?v=20260821-1", "data-question-type-badge-loader");
         await loadScriptOnce("question-learning-controls.js?v=20260823-1", "data-question-learning-controls-loader");
 
+        // 错题/记忆模糊模块只维护重点状态和跨日3次正确进度，不再拥有“今日曲线”按钮口径。
         await loadScriptOnce("memory-blur-priority-engine.js?v=20260831-1", "data-memory-blur-priority-engine-loader");
         await loadScriptOnce("wrong-answer-remediation-engine.js?v=20260831-1", "data-wrong-answer-remediation-engine-loader");
         await loadScriptOnce("wrong-answer-focus-getter-fix.js?v=20260831-1", "data-wrong-answer-focus-getter-fix-loader");
@@ -120,20 +121,19 @@
         // 修复旧版升级时把历史错题/模糊题全部强制变成“30天前逾期”的假 backlog。
         await loadScriptOnce("bank-legacy-focus-migration-repair.js?v=20260831-1", "data-bank-legacy-focus-migration-repair-loader");
 
-        // 今日应刷池 v4：历史逾期 + 今日到期 + 今日重点复现 - 今日已答对。
-        // 点击后一次性刷完当前全部今日池，不再限制12题/重点4题；退出后再进只继续当前剩余题。
-        await loadScriptOnce("bank-today-due-pool-policy-v3.js?v=20260901-4", "data-bank-today-due-pool-policy-v3-loader");
-
-        // 最终长期曲线统一策略：1→2→4→7→15→30→60→90天，90天封顶；
-        // 错题/记忆模糊跨日3次正确后按原档位退回7天或15天，再继续长期曲线。
+        // 长期曲线先完成最终 level/dueDate：1→2→4→7→15→30→60→90天，90天封顶。
         await loadScriptOnce("bank-long-term-memory-curve-policy.js?v=20260901-1", "data-bank-long-term-memory-curve-policy-loader");
 
-        // 浏览器本地曲线详情 v3：挂在整张每日卡片外部，不参与卡片内部 flex 布局。
+        // 唯一“今日曲线”控制器：按钮数字、今日池、全量会话、当日答对排除都只以它为准。
+        await loadScriptOnce("bank-today-curve-controller.js?v=20260901-1", "data-bank-today-curve-controller-loader");
+
+        // 浏览器本地曲线详情：只读取唯一控制器的 getBankTodayDuePool，不参与题池计算。
         await loadScriptOnce("bank-curve-diagnostics.js?v=20260901-3", "data-bank-curve-diagnostics-loader");
 
         await loadScriptOnce("weak-knowledge-collapse-defaults.js?v=20260817-1", "data-weak-knowledge-collapse-loader");
 
         refreshQuestionViews();
+        if (typeof window.refreshBankTodayCurveButton === "function") window.refreshBankTodayCurveButton();
         if (typeof window.__refreshBankCurveDiagnostics === "function") window.__refreshBankCurveDiagnostics();
     }
 
