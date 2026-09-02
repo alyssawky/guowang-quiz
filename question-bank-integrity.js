@@ -91,7 +91,9 @@
         await loadScriptOnce("bank-plan-timeline-explanations.js?v=20260831-1", "data-bank-plan-timeline-explanations-loader");
         await loadScriptOnce("bank-history-context.js?v=20260817-1", "data-bank-history-context-loader");
         await loadScriptOnce("bank-history-context-expanded.js?v=20260817-1", "data-bank-history-context-expanded-loader");
-        await loadScriptOnce("daily-practice.js?v=20260816-4", "data-daily-practice-loader");
+
+        // 首页每日任务 v6：今天的新题若未在昨天完成预习，正式答题前强制先补完未预习题。
+        await loadScriptOnce("daily-practice.js?v=20260902-6", "data-daily-practice-loader");
 
         // 底层曲线只负责保存/推进基础 schedule；最终“今天刷什么”由最后的唯一控制器决定。
         await loadScriptOnce("memory-curve.js?v=20260831-4", "data-memory-curve-loader");
