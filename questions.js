@@ -38,7 +38,8 @@ const questions = [];
   "questions-quantity-l3.js?v=20260821-1",
   "questions-quantity-l4.js?v=20260821-1",
   "questions-quantity-l5.js?v=20260821-1",
-  "stategrid-judge-explanations.js?v=20260826-1"
+  "stategrid-judge-explanations.js?v=20260826-1",
+  "daily-practice-explanation-html-fix.js?v=20260903-1"
 ].forEach(src => document.write(`<script src="${src}"><\/script>`));
 
 // 每日国网任务、知识解析、记忆曲线等必须等 app.js 初始化完 answerHistory / recordAnswer 后再加载。
