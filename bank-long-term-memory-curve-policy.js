@@ -4,7 +4,7 @@
 //   刚答错/再次模糊 → 次日复现；重点正确1/3 → 2天后；重点正确2/3 → 4天后；重点正确3/3 → 退出重点。
 // 完全恢复后，原曲线已到30/60/90天档则回15天档，否则回7天档，再重新向30/60/90天推进。
 (function () {
-    const VERSION = 3;
+    const VERSION = 4;
     if (Number(window.__bankLongTermMemoryCurveVersion || 0) >= VERSION) return;
     window.__bankLongTermMemoryCurveVersion = VERSION;
 
@@ -34,6 +34,13 @@
 
     function isoFromTimestamp(value) {
         return value ? localISO(new Date(value)) : "";
+    }
+
+    function normalizeDateLike(value) {
+        if (!value) return "";
+        const text = String(value);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+        return isoFromTimestamp(value);
     }
 
     function addDaysISO(dateString, days) {
@@ -119,8 +126,9 @@
         if (record.wrongFocusActive === true) streaks.push(Math.max(0, Number(record.wrongFocusStreak || 0)));
         if (record.memoryBlurFocusActive === true) streaks.push(Math.max(0, Number(record.memoryBlurFocusStreak || 0)));
         if (!streaks.length) return 0;
-        // 如果同一道题同时是“错题重点”和“模糊重点”，按较低进度安排，避免过早解除验证。
-        return Math.min(...streaks);
+        // 同一道题可能因“记忆模糊”技术上同时挂有错题/模糊两个标记；以已完成的最高验证进度安排间隔，
+        // 避免因为旧版本两个计数不同步而继续每天出现。
+        return Math.max(...streaks);
     }
 
     function focusIntervalDays(progress) {
@@ -129,10 +137,10 @@
         return FOCUS_INTERVALS[0];
     }
 
-    function writeFocusSchedule(questionId, progress, source) {
-        const today = localISO();
+    function writeFocusScheduleFromDate(questionId, progress, anchorDate, source) {
+        const baseDate = anchorDate || localISO();
         const days = focusIntervalDays(progress);
-        const nextDate = addDaysISO(today, days);
+        const nextDate = addDaysISO(baseDate, days);
         const record = recordOf(questionId);
         if (record) {
             record.focusNextEligibleDate = nextDate;
@@ -146,13 +154,17 @@
             ...old,
             level: clampLevel(old.level || 0),
             dueDate: nextDate,
-            lastReviewedDate: today,
+            lastReviewedDate: baseDate,
             source,
             focus: true,
             wrongFocus: Boolean(record?.wrongFocusActive === true),
             longTermCurve: true
         };
         saveStore(store);
+    }
+
+    function writeFocusSchedule(questionId, progress, source) {
+        writeFocusScheduleFromDate(questionId, progress, localISO(), source);
     }
 
     function writeNormalSchedule(questionId, level, source) {
@@ -186,6 +198,43 @@
             : RECOVERY_SHORT_LEVEL;
     }
 
+    function latestFocusCorrectDate(record) {
+        if (!record) return "";
+        return [
+            normalizeDateLike(record.wrongFocusLastCorrectAt),
+            normalizeDateLike(record.memoryBlurFocusLastCorrectAt),
+            normalizeDateLike(record.wrongFocusLastCountedDate),
+            normalizeDateLike(record.memoryBlurFocusLastCountedDate)
+        ].filter(Boolean).sort().pop() || "";
+    }
+
+    // 把升级前已经处于1/3、2/3的重点题立即迁移到新的递增间隔，保留进度、不要求重新做。
+    function migrateExistingFocusSpacing() {
+        if (!Array.isArray(questions) || typeof answerHistory === "undefined") return;
+        let changed = false;
+
+        questions.filter(isBankQuestion).forEach(question => {
+            const record = recordOf(question.id);
+            if (!isFocusRecord(record)) return;
+            const progress = activeFocusProgress(record);
+            if (progress < 1 || progress >= 3) return;
+            const anchor = latestFocusCorrectDate(record);
+            if (!anchor) return;
+
+            const expectedNext = addDaysISO(anchor, focusIntervalDays(progress));
+            if (
+                record.focusNextEligibleDate !== expectedNext ||
+                Number(record.focusSpacingProgress || -1) !== progress ||
+                Number(record.focusSpacingDays || 0) !== focusIntervalDays(progress)
+            ) {
+                writeFocusScheduleFromDate(question.id, progress, anchor, "focus-remediation-spacing-migrated");
+                changed = true;
+            }
+        });
+
+        if (changed) saveHistory();
+    }
+
     function patchCurveButton() {
         const button = document.getElementById("start-cumulative-memory");
         if (!button) return;
@@ -198,8 +247,8 @@
 
     // 最外层记录包装器：统一长期曲线 + 重点题递增验证间隔。
     const baseRecordAnswer = window.recordAnswer;
-    if (typeof baseRecordAnswer === "function" && !window.__bankLongTermRecordWrappedV3) {
-        window.__bankLongTermRecordWrappedV3 = true;
+    if (typeof baseRecordAnswer === "function" && !window.__bankLongTermRecordWrappedV4) {
+        window.__bankLongTermRecordWrappedV4 = true;
         window.recordAnswer = function (questionId, isCorrect, ...rest) {
             const question = questionById(questionId);
             if (!question || !isBankQuestion(question)) {
@@ -288,8 +337,8 @@
     }
 
     const baseStartQuestionSession = window.startQuestionSession;
-    if (typeof baseStartQuestionSession === "function" && !window.__bankLongTermStartWrappedV3) {
-        window.__bankLongTermStartWrappedV3 = true;
+    if (typeof baseStartQuestionSession === "function" && !window.__bankLongTermStartWrappedV4) {
+        window.__bankLongTermStartWrappedV4 = true;
         window.startQuestionSession = function (questionList, title, sequenceText = "") {
             let finalSequence = sequenceText;
             if (String(title || "").includes("记忆曲线答题")) {
@@ -320,7 +369,10 @@
         };
     };
 
+    migrateExistingFocusSpacing();
     patchCurveButton();
+    if (typeof window.refreshBankTodayCurveButton === "function") setTimeout(window.refreshBankTodayCurveButton, 20);
+    if (typeof window.__refreshBankCurveDiagnostics === "function") setTimeout(window.__refreshBankCurveDiagnostics, 30);
     setTimeout(patchCurveButton, 0);
     setTimeout(patchCurveButton, 250);
 })();
