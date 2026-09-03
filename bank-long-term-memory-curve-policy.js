@@ -1,19 +1,22 @@
 // 国网固定长期记忆曲线统一策略。
 // 正常曲线：1 → 2 → 4 → 7 → 15 → 30 → 60 → 90 天，90天封顶循环。
-// 错题/记忆模糊：继续执行“跨不同日期连续答对3次”重点巩固；完全恢复后，
-// 原曲线已到30/60/90天档则回15天档，否则回7天档，再重新向30/60/90天推进。
+// 错题/记忆模糊重点不再“每天必出”：
+//   刚答错/再次模糊 → 次日复现；重点正确1/3 → 2天后；重点正确2/3 → 4天后；重点正确3/3 → 退出重点。
+// 完全恢复后，原曲线已到30/60/90天档则回15天档，否则回7天档，再重新向30/60/90天推进。
 (function () {
-    const VERSION = 2;
+    const VERSION = 3;
     if (Number(window.__bankLongTermMemoryCurveVersion || 0) >= VERSION) return;
     window.__bankLongTermMemoryCurveVersion = VERSION;
 
     const STORE_KEY = "guowang-memory-curve-v2";
     const INTERVALS = [1, 2, 4, 7, 15, 30, 60, 90];
+    const FOCUS_INTERVALS = { 0: 1, 1: 2, 2: 4 }; // 错/模糊后1天，1/3后2天，2/3后4天
     const RECOVERY_SHORT_LEVEL = 3; // 7天
     const RECOVERY_LONG_LEVEL = 4;  // 15天
     const LONG_LEVEL_THRESHOLD = 5; // 原来已到30天及以上
 
     window.BANK_LONG_TERM_INTERVALS = INTERVALS.slice();
+    window.BANK_FOCUS_REMEDIATION_INTERVALS = { ...FOCUS_INTERVALS };
 
     function safeParse(value, fallback) {
         try { return value ? JSON.parse(value) : fallback; }
@@ -110,6 +113,48 @@
         ));
     }
 
+    function activeFocusProgress(record) {
+        if (!record) return 0;
+        const streaks = [];
+        if (record.wrongFocusActive === true) streaks.push(Math.max(0, Number(record.wrongFocusStreak || 0)));
+        if (record.memoryBlurFocusActive === true) streaks.push(Math.max(0, Number(record.memoryBlurFocusStreak || 0)));
+        if (!streaks.length) return 0;
+        // 如果同一道题同时是“错题重点”和“模糊重点”，按较低进度安排，避免过早解除验证。
+        return Math.min(...streaks);
+    }
+
+    function focusIntervalDays(progress) {
+        if (progress >= 2) return FOCUS_INTERVALS[2];
+        if (progress >= 1) return FOCUS_INTERVALS[1];
+        return FOCUS_INTERVALS[0];
+    }
+
+    function writeFocusSchedule(questionId, progress, source) {
+        const today = localISO();
+        const days = focusIntervalDays(progress);
+        const nextDate = addDaysISO(today, days);
+        const record = recordOf(questionId);
+        if (record) {
+            record.focusNextEligibleDate = nextDate;
+            record.focusSpacingDays = days;
+            record.focusSpacingProgress = progress;
+        }
+
+        const store = loadStore();
+        const old = store[questionId] || {};
+        store[questionId] = {
+            ...old,
+            level: clampLevel(old.level || 0),
+            dueDate: nextDate,
+            lastReviewedDate: today,
+            source,
+            focus: true,
+            wrongFocus: Boolean(record?.wrongFocusActive === true),
+            longTermCurve: true
+        };
+        saveStore(store);
+    }
+
     function writeNormalSchedule(questionId, level, source) {
         const today = localISO();
         const store = loadStore();
@@ -126,6 +171,13 @@
             longTermCurve: true
         };
         saveStore(store);
+
+        const record = recordOf(questionId);
+        if (record) {
+            delete record.focusNextEligibleDate;
+            delete record.focusSpacingDays;
+            delete record.focusSpacingProgress;
+        }
     }
 
     function recoveryLevel(originLevel) {
@@ -137,19 +189,17 @@
     function patchCurveButton() {
         const button = document.getElementById("start-cumulative-memory");
         if (!button) return;
-        const marker = "长期曲线 1→2→4→7→15→30→60→90天";
-        const title = String(button.title || "").replace(/\n?长期曲线 1→2→4→7→15→30→60→90天/g, "");
+        const marker = "长期曲线 1→2→4→7→15→30→60→90天；重点验证 1→2→4天";
+        const title = String(button.title || "")
+            .replace(/\n?长期曲线 1→2→4→7→15→30→60→90天；重点验证 1→2→4天/g, "")
+            .replace(/\n?长期曲线 1→2→4→7→15→30→60→90天/g, "");
         button.title = `${title}${title ? "\n" : ""}${marker}`;
     }
 
-    // 最后加载、最外层记录包装器：
-    // 1) 把旧6档调度最终纠正为8档；
-    // 2) 捕获进入重点复习前的原曲线等级；
-    // 3) 同一重点题同一天的第二次正确不再累计“3次正确”；
-    // 4) 完全退出重点状态时按7/15天档恢复。
+    // 最外层记录包装器：统一长期曲线 + 重点题递增验证间隔。
     const baseRecordAnswer = window.recordAnswer;
-    if (typeof baseRecordAnswer === "function" && !window.__bankLongTermRecordWrapped) {
-        window.__bankLongTermRecordWrapped = true;
+    if (typeof baseRecordAnswer === "function" && !window.__bankLongTermRecordWrappedV3) {
+        window.__bankLongTermRecordWrappedV3 = true;
         window.recordAnswer = function (questionId, isCorrect, ...rest) {
             const question = questionById(questionId);
             if (!question || !isBankQuestion(question)) {
@@ -170,15 +220,12 @@
             const wasBlurFocus = Boolean(beforeRecord?.memoryBlurFocusActive === true);
             const wasAnyFocus = wasWrongFocus || wasBlurFocus;
 
-            // 第一次进入本轮重点状态前，保存真正的正常曲线档位。
             if (!Boolean(isCorrect) && !wasAnyFocus && beforeRecord) {
                 if (!Number.isFinite(Number(beforeRecord.focusOriginCurveLevel))) {
                     beforeRecord.focusOriginCurveLevel = beforeLevel;
                 }
             }
 
-            // 跨日三连保护：同一天已经算过一次正确，就暂时隐藏对应重点状态，
-            // 防止旧引擎把同日第二次正确从1/3推进到2/3。
             const suppressWrong = Boolean(isCorrect && wasWrongFocus && countedWrongToday(beforeRecord, today));
             const suppressBlur = Boolean(isCorrect && wasBlurFocus && countedBlurToday(beforeRecord, today));
             if (suppressWrong && beforeRecord) beforeRecord.wrongFocusActive = false;
@@ -191,7 +238,6 @@
             if (suppressWrong) record.wrongFocusActive = true;
             if (suppressBlur) record.memoryBlurFocusActive = true;
 
-            // 首次作答就是错误时，record对象是在base内部创建的，这里补存原档位0。
             if (!Boolean(isCorrect) && isFocusRecord(record) && !Number.isFinite(Number(record.focusOriginCurveLevel))) {
                 record.focusOriginCurveLevel = beforeLevel;
             }
@@ -213,9 +259,16 @@
                 record.lastFocusOriginCurveLevel = origin;
                 record.focusRecoveryCurveLevel = level;
                 delete record.focusOriginCurveLevel;
-            } else if (Boolean(isCorrect) && !stillFocus && !wasAnyFocus) {
-                // 正常曲线正确：曲线会话提升一级；正式学习/其他入口维持当前档位。
-                // 即使旧memory-curve在6档处把level误压回5，这里也会根据beforeLevel重新覆盖。
+            } else if (stillFocus) {
+                if (!Boolean(isCorrect)) {
+                    // 新错误/再次模糊：进度被旧引擎重置为0，次日再验证。
+                    writeFocusSchedule(questionId, 0, "focus-remediation-after-error");
+                } else if (!suppressWrong && !suppressBlur) {
+                    // 1/3正确后隔2天，2/3正确后隔4天；不再每天重复。
+                    const progress = activeFocusProgress(record);
+                    writeFocusSchedule(questionId, progress, "focus-remediation-spaced-correct");
+                }
+            } else if (Boolean(isCorrect) && !wasAnyFocus) {
                 const level = inCurve
                     ? Math.min(beforeLevel + 1, INTERVALS.length - 1)
                     : beforeLevel;
@@ -224,6 +277,9 @@
 
             saveHistory();
             setTimeout(patchCurveButton, 80);
+            if (typeof window.refreshBankTodayCurveButton === "function") {
+                setTimeout(window.refreshBankTodayCurveButton, 90);
+            }
             if (typeof window.__refreshBankCurveDiagnostics === "function") {
                 setTimeout(window.__refreshBankCurveDiagnostics, 100);
             }
@@ -231,10 +287,9 @@
         };
     }
 
-    // 统一把答题页上的曲线说明升级为8档长期模型。
     const baseStartQuestionSession = window.startQuestionSession;
-    if (typeof baseStartQuestionSession === "function" && !window.__bankLongTermStartWrapped) {
-        window.__bankLongTermStartWrapped = true;
+    if (typeof baseStartQuestionSession === "function" && !window.__bankLongTermStartWrappedV3) {
+        window.__bankLongTermStartWrappedV3 = true;
         window.startQuestionSession = function (questionList, title, sequenceText = "") {
             let finalSequence = sequenceText;
             if (String(title || "").includes("记忆曲线答题")) {
@@ -245,6 +300,9 @@
                 if (!finalSequence.includes("60→90")) {
                     finalSequence = `${finalSequence}${finalSequence ? " · " : ""}长期曲线：${curveText}`;
                 }
+                if (!finalSequence.includes("重点验证：1→2→4天")) {
+                    finalSequence = `${finalSequence}${finalSequence ? " · " : ""}重点验证：1→2→4天`;
+                }
             }
             return baseStartQuestionSession.call(this, questionList, title, finalSequence);
         };
@@ -254,6 +312,8 @@
         return {
             intervals: INTERVALS.slice(),
             ceilingDays: 90,
+            focusIntervals: [1, 2, 4],
+            focusRule: "错/模糊后1天；1/3正确后2天；2/3正确后4天；3/3退出重点",
             recoveryFromShortLevelDays: INTERVALS[RECOVERY_SHORT_LEVEL],
             recoveryFromLongLevelDays: INTERVALS[RECOVERY_LONG_LEVEL],
             longLevelThresholdDays: INTERVALS[LONG_LEVEL_THRESHOLD]
