@@ -2,18 +2,16 @@
 // 正常曲线：1 → 2 → 4 → 7 → 15 → 30 → 60 → 90 天，90天封顶循环。
 // 错题/记忆模糊重点不再“每天必出”：
 //   刚答错/再次模糊 → 次日复现；重点正确1/3 → 2天后；重点正确2/3 → 4天后；重点正确3/3 → 退出重点。
-// 完全恢复后，原曲线已到30/60/90天档则回15天档，否则回7天档，再重新向30/60/90天推进。
+// 重点题已经完成1→2→4天补救验证，因此3/3移出重点后直接从普通长期曲线的4天档开始，随后走7→15→30→60→90天。
 (function () {
-    const VERSION = 4;
+    const VERSION = 5;
     if (Number(window.__bankLongTermMemoryCurveVersion || 0) >= VERSION) return;
     window.__bankLongTermMemoryCurveVersion = VERSION;
 
     const STORE_KEY = "guowang-memory-curve-v2";
     const INTERVALS = [1, 2, 4, 7, 15, 30, 60, 90];
     const FOCUS_INTERVALS = { 0: 1, 1: 2, 2: 4 }; // 错/模糊后1天，1/3后2天，2/3后4天
-    const RECOVERY_SHORT_LEVEL = 3; // 7天
-    const RECOVERY_LONG_LEVEL = 4;  // 15天
-    const LONG_LEVEL_THRESHOLD = 5; // 原来已到30天及以上
+    const RECOVERY_LEVEL = 2; // 重点3/3后从普通曲线4天档重新开始
 
     window.BANK_LONG_TERM_INTERVALS = INTERVALS.slice();
     window.BANK_FOCUS_REMEDIATION_INTERVALS = { ...FOCUS_INTERVALS };
@@ -167,16 +165,15 @@
         writeFocusScheduleFromDate(questionId, progress, localISO(), source);
     }
 
-    function writeNormalSchedule(questionId, level, source) {
-        const today = localISO();
+    function writeNormalSchedule(questionId, level, source, anchorDate = localISO()) {
         const store = loadStore();
         const old = store[questionId] || {};
         const safeLevel = clampLevel(level);
         store[questionId] = {
             ...old,
             level: safeLevel,
-            dueDate: addDaysISO(today, INTERVALS[safeLevel]),
-            lastReviewedDate: today,
+            dueDate: addDaysISO(anchorDate, INTERVALS[safeLevel]),
+            lastReviewedDate: anchorDate,
             source,
             focus: false,
             wrongFocus: false,
@@ -190,12 +187,6 @@
             delete record.focusSpacingDays;
             delete record.focusSpacingProgress;
         }
-    }
-
-    function recoveryLevel(originLevel) {
-        return clampLevel(originLevel) >= LONG_LEVEL_THRESHOLD
-            ? RECOVERY_LONG_LEVEL
-            : RECOVERY_SHORT_LEVEL;
     }
 
     function latestFocusCorrectDate(record) {
@@ -235,11 +226,41 @@
         if (changed) saveHistory();
     }
 
+    // v5迁移：旧版已经完成3/3、但被排到7天/15天档的题，统一从最后一次通过日期+4天开始。
+    function migrateRecoveredToFourDayStart() {
+        const store = loadStore();
+        let changed = false;
+
+        Object.keys(store).forEach(questionId => {
+            const item = store[questionId];
+            if (!item || item.source !== "long-term-focus-recovered") return;
+            if (Number(item.level) === RECOVERY_LEVEL && Number(recordOf(questionId)?.focusRecoveryCurveLevel) === RECOVERY_LEVEL) return;
+
+            const anchor = normalizeDateLike(item.lastReviewedDate) || localISO();
+            item.level = RECOVERY_LEVEL;
+            item.dueDate = addDaysISO(anchor, INTERVALS[RECOVERY_LEVEL]);
+            item.source = "long-term-focus-recovered";
+            item.focus = false;
+            item.wrongFocus = false;
+            item.longTermCurve = true;
+
+            const record = recordOf(questionId);
+            if (record) record.focusRecoveryCurveLevel = RECOVERY_LEVEL;
+            changed = true;
+        });
+
+        if (changed) {
+            saveStore(store);
+            saveHistory();
+        }
+    }
+
     function patchCurveButton() {
         const button = document.getElementById("start-cumulative-memory");
         if (!button) return;
-        const marker = "长期曲线 1→2→4→7→15→30→60→90天；重点验证 1→2→4天";
+        const marker = "长期曲线 1→2→4→7→15→30→60→90天；重点验证 1→2→4天；重点移出后从4天档继续";
         const title = String(button.title || "")
+            .replace(/\n?长期曲线 1→2→4→7→15→30→60→90天；重点验证 1→2→4天；重点移出后从4天档继续/g, "")
             .replace(/\n?长期曲线 1→2→4→7→15→30→60→90天；重点验证 1→2→4天/g, "")
             .replace(/\n?长期曲线 1→2→4→7→15→30→60→90天/g, "");
         button.title = `${title}${title ? "\n" : ""}${marker}`;
@@ -247,8 +268,8 @@
 
     // 最外层记录包装器：统一长期曲线 + 重点题递增验证间隔。
     const baseRecordAnswer = window.recordAnswer;
-    if (typeof baseRecordAnswer === "function" && !window.__bankLongTermRecordWrappedV4) {
-        window.__bankLongTermRecordWrappedV4 = true;
+    if (typeof baseRecordAnswer === "function" && !window.__bankLongTermRecordWrappedV5) {
+        window.__bankLongTermRecordWrappedV5 = true;
         window.recordAnswer = function (questionId, isCorrect, ...rest) {
             const question = questionById(questionId);
             if (!question || !isBankQuestion(question)) {
@@ -303,10 +324,9 @@
                 const origin = Number.isFinite(Number(record.focusOriginCurveLevel))
                     ? clampLevel(record.focusOriginCurveLevel)
                     : beforeLevel;
-                const level = recoveryLevel(origin);
-                writeNormalSchedule(questionId, level, "long-term-focus-recovered");
+                writeNormalSchedule(questionId, RECOVERY_LEVEL, "long-term-focus-recovered", today);
                 record.lastFocusOriginCurveLevel = origin;
-                record.focusRecoveryCurveLevel = level;
+                record.focusRecoveryCurveLevel = RECOVERY_LEVEL;
                 delete record.focusOriginCurveLevel;
             } else if (stillFocus) {
                 if (!Boolean(isCorrect)) {
@@ -321,7 +341,7 @@
                 const level = inCurve
                     ? Math.min(beforeLevel + 1, INTERVALS.length - 1)
                     : beforeLevel;
-                writeNormalSchedule(questionId, level, inCurve ? "long-term-curve" : "long-term-formal");
+                writeNormalSchedule(questionId, level, inCurve ? "long-term-curve" : "long-term-formal", today);
             }
 
             saveHistory();
@@ -337,8 +357,8 @@
     }
 
     const baseStartQuestionSession = window.startQuestionSession;
-    if (typeof baseStartQuestionSession === "function" && !window.__bankLongTermStartWrappedV4) {
-        window.__bankLongTermStartWrappedV4 = true;
+    if (typeof baseStartQuestionSession === "function" && !window.__bankLongTermStartWrappedV5) {
+        window.__bankLongTermStartWrappedV5 = true;
         window.startQuestionSession = function (questionList, title, sequenceText = "") {
             let finalSequence = sequenceText;
             if (String(title || "").includes("记忆曲线答题")) {
@@ -352,6 +372,9 @@
                 if (!finalSequence.includes("重点验证：1→2→4天")) {
                     finalSequence = `${finalSequence}${finalSequence ? " · " : ""}重点验证：1→2→4天`;
                 }
+                if (!finalSequence.includes("重点移出后：从4天档继续")) {
+                    finalSequence = `${finalSequence}${finalSequence ? " · " : ""}重点移出后：从4天档继续`;
+                }
             }
             return baseStartQuestionSession.call(this, questionList, title, finalSequence);
         };
@@ -363,13 +386,14 @@
             ceilingDays: 90,
             focusIntervals: [1, 2, 4],
             focusRule: "错/模糊后1天；1/3正确后2天；2/3正确后4天；3/3退出重点",
-            recoveryFromShortLevelDays: INTERVALS[RECOVERY_SHORT_LEVEL],
-            recoveryFromLongLevelDays: INTERVALS[RECOVERY_LONG_LEVEL],
-            longLevelThresholdDays: INTERVALS[LONG_LEVEL_THRESHOLD]
+            recoveryAfterFocusDays: INTERVALS[RECOVERY_LEVEL],
+            recoveryFromShortLevelDays: INTERVALS[RECOVERY_LEVEL],
+            recoveryFromLongLevelDays: INTERVALS[RECOVERY_LEVEL]
         };
     };
 
     migrateExistingFocusSpacing();
+    migrateRecoveredToFourDayStart();
     patchCurveButton();
     if (typeof window.refreshBankTodayCurveButton === "function") setTimeout(window.refreshBankTodayCurveButton, 20);
     if (typeof window.__refreshBankCurveDiagnostics === "function") setTimeout(window.__refreshBankCurveDiagnostics, 30);
