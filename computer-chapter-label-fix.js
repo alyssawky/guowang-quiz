@@ -1,10 +1,14 @@
-// 计算机章节显示修复：按教材章节而不是“第几个可复习任务”显示。
-// 同时明确 computer-007 = 第四章 计算机软件，computer-012 = 第六章后补充。
+// 计算机章节显示：严格按教材章节号，不再用任务序号或“2/3”混合标识。
+// 计划日期只由 plan.js 决定；本文件仅负责显示名称，不修改 startDate/endDate/week。
 (function () {
     const TASK_LABELS = {
         "computer-001": { chapter: "1", module: "第一章 计算机基础", name: "第一章 计算机基础（计算机系统组成）" },
         "computer-002": { chapter: "2", module: "第二章 数据的表示与运算" },
-        "computer-003": { chapter: "2/3" },
+        "computer-003": {
+            chapter: "3",
+            module: "第三章 计算机硬件",
+            name: "第三章 计算机硬件（CPU · 冯·诺依曼体系；含机器数表示衔接题）"
+        },
         "computer-004": { chapter: "2", module: "第二章 数据的表示与运算" },
         "computer-005": { chapter: "2", module: "第二章 数据的表示与运算" },
         "computer-006": { chapter: "3", module: "第三章 计算机硬件" },
@@ -36,10 +40,14 @@
         "computer-024": { chapter: "11", module: "第十一章 信息科学前沿" }
     };
 
+    function getPlan() {
+        if (typeof studyPlan !== "undefined" && Array.isArray(studyPlan)) return studyPlan;
+        if (Array.isArray(window.studyPlan)) return window.studyPlan;
+        return [];
+    }
+
     function applyTaskLabels() {
-        if (!Array.isArray(window.studyPlan || (typeof studyPlan !== "undefined" ? studyPlan : null))) return;
-        const list = window.studyPlan || studyPlan;
-        list.forEach(task => {
+        getPlan().forEach(task => {
             const label = TASK_LABELS[task.id];
             if (!label) return;
             if (label.module) task.module = label.module;
@@ -48,10 +56,14 @@
         });
     }
 
+    function taskIdFromReviewRow(row) {
+        const button = row.querySelector("[data-review-task-id]") || row.querySelector("[data-view-task-id]");
+        return button?.dataset.reviewTaskId || button?.dataset.viewTaskId || "";
+    }
+
     function decorateComputerChapterIndexes() {
         document.querySelectorAll(".review-computer-group .review-chapter-row").forEach(row => {
-            const button = row.querySelector("[data-review-task-id]") || row.querySelector("[data-view-task-id]");
-            const taskId = button?.dataset.reviewTaskId || button?.dataset.viewTaskId;
+            const taskId = taskIdFromReviewRow(row);
             const label = TASK_LABELS[taskId];
             const index = row.querySelector(".review-chapter-index");
             if (index && label?.chapter) index.textContent = label.chapter;
@@ -64,22 +76,24 @@
         applyTaskLabels();
 
         const baseRenderSectionChooser = window.renderSectionChooser;
-        if (typeof baseRenderSectionChooser === "function" && !baseRenderSectionChooser.__computerChapterLabelsWrapped) {
+        if (typeof baseRenderSectionChooser === "function" && !baseRenderSectionChooser.__computerChapterLabelsWrappedV2) {
             const wrapped = function (...args) {
                 applyTaskLabels();
                 const result = baseRenderSectionChooser.apply(this, args);
                 decorateComputerChapterIndexes();
                 return result;
             };
-            wrapped.__computerChapterLabelsWrapped = true;
+            wrapped.__computerChapterLabelsWrappedV2 = true;
             window.renderSectionChooser = wrapped;
         }
 
         if (typeof window.renderSectionChooser === "function") window.renderSectionChooser();
         if (typeof window.renderReviewPool === "function") window.renderReviewPool();
         if (typeof window.renderTasks === "function") window.renderTasks();
+        if (typeof window.renderCalendar === "function") window.renderCalendar();
         decorateComputerChapterIndexes();
     });
 
     window.applyComputerChapterLabels = applyTaskLabels;
+    window.getComputerTextbookChapterLabel = taskId => TASK_LABELS[taskId]?.chapter || "";
 })();
